@@ -1,5 +1,6 @@
 #include "display_requirement.h"
 #include "proclore.h"
+#include "log_commands.h"
 #include <sys/types.h>
 #include <string.h>
 int main()
@@ -16,6 +17,8 @@ int main()
     int flag = 1;
     while (flag)
     {
+        
+        
         const char delimiters[] = " \t";
         // Update and display the prompt
         prompt(home_dir);

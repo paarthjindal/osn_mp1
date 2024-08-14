@@ -1,5 +1,7 @@
 #include "display_requirement.h"
 #include "proclore.h"
+#include "log_commands.h"
+
 #include <sys/types.h>
 #include <string.h>
 int main()
@@ -14,8 +16,11 @@ int main()
         exit(EXIT_FAILURE);
     }
     int flag = 1;
+    queue *q;
+    q = create_queue(q);
     while (flag)
     {
+
         const char delimiters[] = " \t";
         // Update and display the prompt
         prompt(home_dir);
@@ -30,7 +35,11 @@ int main()
         // Remove the newline character, if present
         int size = strlen(input);
         input[size - 1] = '\0';
-        
+        if (strcmp("log", input) != 0)
+        {
+            enqueue(q, input);
+        }
+
         char *token = strtok(input, delimiters);
         while (token != NULL)
         {
@@ -76,7 +85,9 @@ int main()
                 token = strtok(NULL, delimiters);
                 if (token == NULL)
                 {
-                    
+                    // printf("are you working");
+                    // printf("%d", q->size);
+                    dispaly_log(q);
                 }
                 else
                 {
@@ -97,7 +108,6 @@ int main()
                             if (sscanf(token, "%d", &value) == 1)
                             {
                                 // printf("The integer value is: %d\n", value);
-
                             }
                             else
                             {
