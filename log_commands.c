@@ -101,5 +101,7 @@ void execute(queue *q, int index)
 
 void purge(queue *q)
 {
-    create_queue(q);
+    q->front = -1;
+    q->rear = -1;
+    q->size = 0;
 }

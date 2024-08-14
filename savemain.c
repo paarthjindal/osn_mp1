@@ -21,7 +21,6 @@ int main()
     while (flag)
     {
 
-        const char delimiters[] = " \t";
         // Update and display the prompt
         prompt(home_dir);
 
@@ -35,95 +34,115 @@ int main()
         // Remove the newline character, if present
         int size = strlen(input);
         input[size - 1] = '\0';
-        if (strcmp("log", input) != 0)
+
+        char *temp = strtok(input, ";");
+        char *arr[256];
+        int count = 0;
+        while (temp != NULL)
         {
-            enqueue(q, input);
+            arr[count] = temp;
+            temp = strtok(NULL, ";");
+            count++;
         }
-
-        char *token = strtok(input, delimiters);
-        while (token != NULL)
+        for (int i = 0; i < count; i++)
         {
-            // Print each token (for demonstration purposes)
-            printf("Token: %s\n", token);
 
-            // Check if the first token is "EXIT"
-            if (strcmp(token, "EXIT") == 0)
+            char delimiters[] = " \t";
+
+            if (strcmp("log",arr[i]) != 0)
             {
-                flag = 0;
-                printf("thanks for using mine terminal , hope you had a pleasant experience\n");
-                break;
+                enqueue(q, arr[i]);
             }
-            else if (strcmp(token, "hop") == 0)
+
+            char *token = strtok(arr[i], delimiters);
+            while (token != NULL)
             {
-            }
-            else if (strcmp(token, "proclore") == 0)
-            {
-                token = strtok(NULL, " ");
-                // printf("id = %s\n",token);
-                pid_t process_id = getpid();
-                if (token == NULL)
+                // Print each token (for demonstration purposes)
+                printf("Token: %s\n", token);
+
+                // Check if the first token is "EXIT"
+                if (strcmp(token, "EXIT") == 0)
                 {
-                    describe_process(process_id);
+                    flag = 0;
+                    printf("thanks for using mine terminal , hope you had a pleasant experience\n");
+                    break;
                 }
-                else
+                else if (strcmp(token, "hop") == 0)
                 {
-                    int value;
-                    // it is used to convert a token ie char * to int
-                    if (sscanf(token, "%d", &value) == 1)
+                }
+                else if (strcmp(token, "proclore") == 0)
+                {
+                    token = strtok(NULL, " ");
+                    // printf("id = %s\n",token);
+                    pid_t process_id = getpid();
+                    if (token == NULL)
                     {
-                        // printf("The integer value is: %d\n", value);
-                        describe_process(value);
+                        describe_process(process_id);
                     }
                     else
                     {
-                        printf("Conversion failed.\n");
-                    }
-                }
-            }
-            else if (strcmp(token, "log") == 0)
-            {
-                token = strtok(NULL, delimiters);
-                if (token == NULL)
-                {
-                    // printf("are you working");
-                    // printf("%d", q->size);
-                    dispaly_log(q);
-                }
-                else
-                {
-                    if (token == "purge")
-                    {
-                    }
-                    else if (token == "execute")
-                    {
-                        token = strtok(NULL, delimiters);
-                        if (token == NULL)
+                        int value;
+                        // it is used to convert a token ie char * to int
+                        if (sscanf(token, "%d", &value) == 1)
                         {
-                            printf("wrong input error\n");
+                            // printf("The integer value is: %d\n", value);
+                            describe_process(value);
                         }
                         else
                         {
-                            int value;
-                            // it is used to convert a token ie char * to int
-                            if (sscanf(token, "%d", &value) == 1)
-                            {
-                                // printf("The integer value is: %d\n", value);
-                            }
-                            else
-                            {
-                                printf("Conversion failed.\n");
-                            }
+                            printf("Conversion failed.\n");
                         }
+                    }
+                }
+                else if (strcmp(token, "log") == 0)
+                {
+                    token = strtok(NULL, delimiters);
+                    if (token == NULL)
+                    {
+                        // printf("are you working");
+                        // printf("%d", q->size);
+                        dispaly_log(q);
                     }
                     else
                     {
-                        printf("wrong input erorr\n");
+                        if (token == "purge")
+                        {
+                        }
+                        else if (token == "execute")
+                        {
+                            token = strtok(NULL, delimiters);
+                            if (token == NULL)
+                            {
+                                printf("wrong input error\n");
+                            }
+                            else
+                            {
+                                int value;
+                                // it is used to convert a token ie char * to int
+                                if (sscanf(token, "%d", &value) == 1)
+                                {
+                                    // printf("The integer value is: %d\n", value);
+                                }
+                                else
+                                {
+                                    printf("Conversion failed.\n");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            printf("wrong input erorr\n");
+                        }
                     }
                 }
-            }
+                else
+                {
+                    printf("wrong input\n");
+                }
 
-            // Get the next token
-            token = strtok(NULL, delimiters);
+                // Get the next token
+                token = strtok(NULL, delimiters);
+            }
         }
         // printf("\n");
     }
