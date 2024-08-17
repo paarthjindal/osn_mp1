@@ -7,13 +7,24 @@
 #include <string.h>
 int main()
 {
-    char *home_dir;
-
+    char home_dir[256];
+    char prev_dir[256]="";
     // Get the home directory from the HOME environment variable
-    home_dir = getenv("HOME");
-    if (home_dir == NULL)
+    // home_dir = getenv("HOME");
+    // if (home_dir == NULL)
+    // {
+    //     perror("getenv failed");
+    //     exit(EXIT_FAILURE);
+    // }
+    if (getcwd(home_dir, sizeof(home_dir)) == NULL)
     {
-        perror("getenv failed");
+        perror("getcwd() error");
+        exit(EXIT_FAILURE);
+    }
+    char save_dir[256];
+    if (getcwd(save_dir, sizeof(save_dir)) == NULL)
+    {
+        perror("getcwd() error");
         exit(EXIT_FAILURE);
     }
     int flag = 1;
@@ -23,7 +34,8 @@ int main()
     {
 
         // Update and display the prompt
-        prompt(home_dir);
+        prompt(save_dir);
+        // printf("%s",home_dir);
 
         // Read user input ans store in input
         char input[256];
@@ -48,7 +60,7 @@ int main()
         for (int i = 0; i < count; i++)
         {
             // printf("%s",arr[i]);
-            execute_terminal(arr[i], q, &flag);
+            execute_terminal(arr[i], q, &flag, home_dir,prev_dir);
         }
     }
 

@@ -11,8 +11,9 @@
 #include "proclore.h"
 #include "input_requirement.h"
 #include "log_commands.h"
+#include "hop.h"
 
-void execute_terminal(char * s,queue * q,int *flag);
+void execute_terminal(char * s,queue * q,int *flag,char * home_dir,char * prev_dir);
 
 
 
