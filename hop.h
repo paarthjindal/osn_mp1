@@ -7,7 +7,7 @@
 #include <string.h>
 #include <limits.h>
 
-char* resolve_path( char* input_path, char* home_dir);
+char* resolve_path( char* input_path, char* home_dir,char * prev_dir);
 
 void hop(char* input, char* home_dir,char * prev_dir);
 
