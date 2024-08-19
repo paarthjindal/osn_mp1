@@ -1,7 +1,7 @@
 #include "input_requirement.h"
 #include "log_commands.h"
 
-void execute_terminal(char *s, queue *q, int *flag, char *home_dir,char * prev_dir)
+void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
     char delimiters[] = " \t";
 
@@ -25,17 +25,50 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir,char * prev_d
             token = strtok(NULL, delimiters);
             if (token == NULL)
             {
-                hop("~", home_dir,prev_dir);
+                hop("~", home_dir, prev_dir);
             }
             else
             {
                 while (token != NULL)
                 {
-                    hop(token, home_dir,prev_dir);
+                    hop(token, home_dir, prev_dir);
                     token = strtok(NULL, delimiters);
                 }
             }
             enqueue(q, s);
+        }
+        else if (strcmp(token, "reveal") == 0)
+        {
+            int arr[2];
+            arr[0] = 0;
+            arr[1] = 0;
+            token = strtok(NULL, delimiters);
+            char *path = "";
+            while (token != NULL)
+            {
+                if (token[0] == '-')
+                {
+                    if (strchr(token, 'a'))
+                        arr[0] = 1;
+                    if (strchr(token, 'l'))
+                        arr[1] = 1;
+                }
+                else
+                {
+                    path = token;
+                }
+                token = strtok(NULL, delimiters);
+            }
+            if (path == "")
+            {
+                path = ".";
+            }
+            // Resolve the path to an absolute path
+            char *resolved_path = resolve_path_reveal(path, home_dir, prev_dir);
+
+            // Call reveal to list files and directories
+            reveal(resolved_path, arr[0], arr[1]);
+            free(resolved_path);
         }
         else if (strcmp(token, "proclore") == 0)
         {

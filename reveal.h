@@ -6,7 +6,11 @@
 #include <string.h>
 #include <limits.h>
 
-void prompt(char * home_direc);
+char *resolve_path_reveal(char *input, char *home_dir, char *prev_dir);
+void print_file_details(const char *path, const char *name);
+void reveal(const char *path, int show_all, int long_format);
+
+
 
 
 #endif

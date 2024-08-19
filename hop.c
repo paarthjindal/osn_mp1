@@ -11,8 +11,12 @@
 char *resolve_path(char *input, char *home_dir, char *prev_dir)
 {
     char *path = (char *)malloc(MAX_PATH * sizeof(char));
-
-    if (strcmp(input, "~") == 0)
+    if (strncmp(input, "~/", 2) == 0)
+    {
+        // If the input starts with "~/", replace it with the home directory
+        snprintf(path, MAX_PATH, "%s%s", home_dir, input + 1);
+    }
+    else if (strcmp(input, "~") == 0)
     {
         strcpy(path, home_dir);
     }
