@@ -97,8 +97,7 @@ void print_file_details(const char *path, const char *name)
     }
 }
 
-// Function to list files and directories
-// Supports lexicographic sorting, -a for hidden files, and -l for detailed info
+
 void reveal(const char *path, int show_all, int long_format)
 {
     DIR *dir = opendir(path);
