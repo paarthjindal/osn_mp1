@@ -4,12 +4,16 @@
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
     char delimiters[] = " \t";
+    char *y = (char *)malloc(sizeof(char));
+    strcpy(y, s);
+    // printf("%s\n",s);
 
     char *token = strtok(s, delimiters);
     while (token != NULL)
     {
         // Print each token (for demonstration purposes)
         printf("Token: %s\n", token);
+        // printf("%s\n", y);
 
         // Check if the first token is "EXIT"
         if (strcmp(token, "EXIT") == 0)
@@ -35,7 +39,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                     token = strtok(NULL, delimiters);
                 }
             }
-            enqueue(q, s);
+            enqueue(q, y);
         }
         else if (strcmp(token, "reveal") == 0)
         {
@@ -68,6 +72,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
 
             // Call reveal to list files and directories
             reveal(resolved_path, arr[0], arr[1]);
+            enqueue(q, y);
             free(resolved_path);
         }
         else if (strcmp(token, "proclore") == 0)
@@ -94,7 +99,8 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                     printf("Conversion failed.\n");
                 }
             }
-            enqueue(q, s);
+            // printf("%s\n", s);
+            enqueue(q, y);
         }
         else if (strcmp(token, "log") == 0)
         {
@@ -107,11 +113,11 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
             }
             else
             {
-                if (token == "purge")
+                if (strcmp(token, "purge") == 0)
                 {
                     purge(q);
                 }
-                else if (token == "execute")
+                else if (strcmp(token, "execute") == 0)
                 {
                     token = strtok(NULL, delimiters);
                     if (token == NULL)
@@ -125,6 +131,15 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                         if (sscanf(token, "%d", &value) == 1)
                         {
                             // printf("The integer value is: %d\n", value);
+                            int z = q->size - value;
+                            if (z < 0)
+                            {
+                                printf("wrong index \n");
+                            }
+                            else
+                            {
+                                execute_terminal(q->log[z], q, flag, home_dir, prev_dir);
+                            }
                         }
                         else
                         {
@@ -142,8 +157,55 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
         {
             printf("wrong input\n");
         }
+        // for (int i = 0; i < q->size; i++)
+        // {
+        //     printf("%s\n", q->log[i]);
+        // }
 
         // Get the next token
         token = strtok(NULL, delimiters);
     }
+}
+
+void write_queue_to_file(queue *q, const char *filename, const char *home_dir)
+{
+    char file_path[256];
+    snprintf(file_path, 256, "%s/%s", home_dir, filename);
+
+    FILE *file = fopen(file_path, "w");
+    if (file == NULL)
+    {
+        perror("Could not open file for writing");
+        return;
+    }
+
+    for (int i = 0; i < q->size; i++)
+    {
+        int index = (q->front + i) % 15;
+        fprintf(file, "%s\n", q->log[index]);
+    }
+
+    fclose(file);
+}
+
+void read_queue_from_file(queue *q, const char *filename, const char *home_dir)
+{
+    char file_path[256];
+    snprintf(file_path, 256, "%s/%s", home_dir, filename);
+
+    FILE *file = fopen(file_path, "r");
+    if (file == NULL)
+    {
+        perror("Could not open file for reading");
+        return;
+    }
+
+    char buffer[256];
+    while (fgets(buffer, 256, file))
+    {
+        buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
+        enqueue(q, buffer);
+    }
+
+    fclose(file);
 }

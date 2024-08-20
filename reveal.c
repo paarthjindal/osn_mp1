@@ -21,9 +21,9 @@ char *resolve_path_reveal(char *input, char *home_dir, char *prev_dir)
         // Home directory
         strcpy(path, home_dir);
     }
-    else if(strcmp(input,".")==0)
+    else if (strcmp(input, ".") == 0)
     {
-        strcpy(path,temp_dir);
+        strcpy(path, temp_dir);
     }
     else if (strcmp(input, "-") == 0)
     {
@@ -97,7 +97,6 @@ void print_file_details(const char *path, const char *name)
     }
 }
 
-
 void reveal(const char *path, int show_all, int long_format)
 {
     DIR *dir = opendir(path);
@@ -115,7 +114,7 @@ void reveal(const char *path, int show_all, int long_format)
     while ((entry = readdir(dir)) != NULL)
     {
         // Skip hidden files if -a flag is not present
-        if (!show_all && entry->d_name[0] == '.')
+        if (show_all==0 && entry->d_name[0] == '.')
         {
             continue;
         }

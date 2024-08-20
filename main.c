@@ -9,13 +9,6 @@ int main()
 {
     char home_dir[256];
     char prev_dir[256]="";
-    // Get the home directory from the HOME environment variable
-    // home_dir = getenv("HOME");
-    // if (home_dir == NULL)
-    // {
-    //     perror("getenv failed");
-    //     exit(EXIT_FAILURE);
-    // }
     if (getcwd(home_dir, sizeof(home_dir)) == NULL)
     {
         perror("getcwd() error");
@@ -30,6 +23,8 @@ int main()
     int flag = 1;
     queue *q;
     q = create_queue(q);
+    char * filename="newfile.txt";
+    read_queue_from_file(q,filename,save_dir);
     while (flag)
     {
 
@@ -63,6 +58,7 @@ int main()
             execute_terminal(arr[i], q, &flag, home_dir,prev_dir);
         }
     }
+    write_queue_to_file(q,filename,save_dir);
 
     return 0;
 }
