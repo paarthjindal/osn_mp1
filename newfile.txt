@@ -1,6 +1,5 @@
+hop ..
 hop lesgo
-reveal
-hop test
-EXIT
 proclore
-EXIT
+reveal -l
+lof

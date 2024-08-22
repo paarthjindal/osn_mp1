@@ -15,8 +15,12 @@ char *resolve_path_reveal(char *input, char *home_dir, char *prev_dir)
         perror("getcwd() error");
         exit(EXIT_FAILURE);
     }
-
-    if (strcmp(input, "~") == 0)
+    if (strncmp(input, "~/", 2) == 0)
+    {
+        // If the input starts with "~/", replace it with the home directory
+        snprintf(path, MAX_PATH, "%s%s", home_dir, input + 1);
+    }
+    else if (strcmp(input, "~") == 0)
     {
         // Home directory
         strcpy(path, home_dir);
@@ -114,7 +118,7 @@ void reveal(const char *path, int show_all, int long_format)
     while ((entry = readdir(dir)) != NULL)
     {
         // Skip hidden files if -a flag is not present
-        if (show_all==0 && entry->d_name[0] == '.')
+        if (show_all == 0 && entry->d_name[0] == '.')
         {
             continue;
         }

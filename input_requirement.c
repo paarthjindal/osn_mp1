@@ -18,7 +18,6 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
         // Check if the first token is "EXIT"
         if (strcmp(token, "EXIT") == 0)
         {
-            enqueue(q, s);
 
             *flag = 0;
             printf("thanks for using mine terminal , hope you had a pleasant experience\n");
@@ -39,7 +38,6 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                     token = strtok(NULL, delimiters);
                 }
             }
-            enqueue(q, y);
         }
         else if (strcmp(token, "reveal") == 0)
         {
@@ -72,7 +70,6 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
 
             // Call reveal to list files and directories
             reveal(resolved_path, arr[0], arr[1]);
-            enqueue(q, y);
             free(resolved_path);
         }
         else if (strcmp(token, "proclore") == 0)
@@ -100,7 +97,6 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                 }
             }
             // printf("%s\n", s);
-            enqueue(q, y);
         }
         else if (strcmp(token, "log") == 0)
         {
@@ -152,6 +148,48 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                     printf("wrong input erorr\n");
                 }
             }
+        }
+        else if (strcmp(token, "seek") == 0)
+        {
+            int arr[3];
+            arr[0] = 0;
+            arr[1] = 0;
+            arr[2] = 0;
+            token = strtok(NULL, delimiters);
+            char *path = "";
+            char *seek_name = "";
+            while (token != NULL)
+            {
+                if (token[0] == '-')
+                {
+                    if (strchr(token, 'd'))
+                    {
+                        arr[0] = 1;
+                    }
+                    if (strchr(token, 'f'))
+                    {
+                        arr[1] = 1;
+                    }
+                    if (strchr(token, 'e'))
+                    {
+                        arr[2] = 1;
+                    }
+                }
+                else if (strncmp(token, "./", 2) == 0)
+                {
+                    path = token;
+                }
+                else
+                {
+                    seek_name = token;
+                }
+                token = strtok(NULL, delimiters);
+            }
+            if (path == "")
+            {
+                path = ".";
+            }
+            
         }
         else
         {
