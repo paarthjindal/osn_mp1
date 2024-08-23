@@ -1,15 +1,15 @@
+seek newfile hello
+seek newfile lesgo
+reveal
+seek newfile ./lesgo/newfile
 seek newfile
-seek -d hello
-seek newfile
-`
-seek lesgo
-seek newfile.txt ./lesgo
-seek lesgo
-reveal -l -a
-seek lesgo
-hop .
+seek -e newfile
+seek what
+seek newfile lesgo/lesgo/newfile
+reveal
 seek newfile.txt
-hop ./test
-hop -
+seek newfile ./lesgo/newfile
+hop lesgo
+seek lesgo
+seek newfile lesgo/lesgo/newfile
 seek newfile
-seek hello

@@ -157,8 +157,11 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
             arr[1] = 0;
             arr[2] = 0;
             token = strtok(NULL, delimiters);
-            char *path = "";
-            char *seek_name = "";
+            char *path = (char *)malloc(sizeof(char)*1024);
+            char *seek_name = (char *)malloc(sizeof(char)*1024);
+            path="";
+            seek_name="";
+            int flag=0;
             while (token != NULL)
             {
                 if (token[0] == '-')
@@ -176,13 +179,25 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                         arr[2] = 1;
                     }
                 }
-                else if (strncmp(token, "./", 2) == 0)
-                {
-                    path = token;
-                }
+                // else if (strncmp(token, "./", 2) == 0)
+                // {
+                //     path = token;
+                // }
+                // else
+                // {
+                //     seek_name = token;
+                // }
                 else
                 {
-                    seek_name = token;
+                    if(flag==0)
+                    {
+                        flag=1;
+                        seek_name=token;
+                    }
+                    else
+                    {
+                        path=token;
+                    }
                 }
                 token = strtok(NULL, delimiters);
             }

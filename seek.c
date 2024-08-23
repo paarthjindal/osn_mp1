@@ -6,14 +6,14 @@
 #include <string.h>
 #include <libgen.h> // For basename function (POSIX)
 
-#define MAX_PATH 256
+#define MAX_PATH 1024
 
 char *resolve_path_seek(char *input, char *home_dir, char *prev_dir)
 {
-    char *path = (char *)malloc(256 * sizeof(char));
+    char *path = (char *)malloc(MAX_PATH * sizeof(char));
     if (strncmp(input, "~/", 2) == 0)
     {
-        snprintf(path, 256, "%s%s", home_dir, input + 1);
+        snprintf(path, 1024, "%s%s", home_dir, input + 1);
     }
     else if (strcmp(input, "~") == 0)
     {
@@ -37,7 +37,7 @@ char *resolve_path_seek(char *input, char *home_dir, char *prev_dir)
     }
     else if (strcmp(input, ".") == 0)
     {
-        if (getcwd(path, 256) == NULL)
+        if (getcwd(path, 1024) == NULL)
         {
             perror("getcwd() error");
         }
@@ -90,11 +90,11 @@ void print_with_color(const char *path, const char *name, int is_directory)
 
 int search_directory(const char *resolved_path_seek, const char *seek_name, int a, int b, int c, char *found_path)
 {
-    printf("%s\n",resolved_path_seek);
     DIR *dir = opendir(resolved_path_seek);
     if (!dir)
     {
-        perror("opendir");
+        // printf("being invalid\n");
+        // printf("No such directory exists\n");
         return 0;
     }
 
@@ -109,6 +109,11 @@ int search_directory(const char *resolved_path_seek, const char *seek_name, int 
         }
 
         char full_path[MAX_PATH];
+        if (strlen(resolved_path_seek) + strlen(entry->d_name) + 2 > MAX_PATH)
+        {
+            fprintf(stderr, "Path too long\n");
+            continue;
+        }
         snprintf(full_path, MAX_PATH, "%s/%s", resolved_path_seek, entry->d_name);
 
         struct stat file_stat;
@@ -124,6 +129,10 @@ int search_directory(const char *resolved_path_seek, const char *seek_name, int 
         // Extract base name (without extension)
         char *dot_position = strrchr(entry->d_name, '.');
         size_t base_name_length = dot_position ? (size_t)(dot_position - entry->d_name) : strlen(entry->d_name);
+        if (base_name_length >= MAX_PATH)
+        {
+            base_name_length = MAX_PATH - 1;
+        }
         char base_name[MAX_PATH];
         strncpy(base_name, entry->d_name, base_name_length);
         base_name[base_name_length] = '\0'; // Null-terminate the base name
@@ -152,6 +161,7 @@ int search_directory(const char *resolved_path_seek, const char *seek_name, int 
 void seek(char *resolved_path_seek, char *seek_name, int a, int b, int c)
 {
     char found_path[MAX_PATH];
+    printf("%s\n", resolved_path_seek);
 
     int match_count = search_directory(resolved_path_seek, seek_name, a, b, c, found_path);
     // printf("what \n");
@@ -187,6 +197,7 @@ void seek(char *resolved_path_seek, char *seek_name, int a, int b, int c)
             {
                 if (access(found_path, R_OK) == 0)
                 {
+                    // over here i need to change a bit what to do for e=1 and one file case 
                     printf("File found: %s\n", found_path);
                 }
                 else
@@ -197,7 +208,7 @@ void seek(char *resolved_path_seek, char *seek_name, int a, int b, int c)
         }
         else
         {
-            printf("No unique match found or permissions are missing.\n");
+            printf("No of matched files/directory more than one.\n");
         }
     }
 }
