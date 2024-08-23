@@ -1,15 +1,15 @@
-seek newfile hello
-seek newfile lesgo
-reveal
-seek newfile ./lesgo/newfile
-seek newfile
-seek -e newfile
-seek what
-seek newfile lesgo/lesgo/newfile
-reveal
+echo "hello world"
 seek newfile.txt
-seek newfile ./lesgo/newfile
+echo "hello you are so good"
 hop lesgo
 seek lesgo
+echo "hello adda addakv adnal ddva va"
+hop lesgo ; reveal ; hop lesgo
+no give me error
+seek newfile lesgo
+what
+sleep hello
+sleep what
+sleep no
+sleep normal
 seek newfile lesgo/lesgo/newfile
-seek newfile

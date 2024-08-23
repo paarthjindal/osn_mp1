@@ -146,6 +146,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                 }
                 else
                 {
+
                     printf("wrong input erorr\n");
                 }
             }
@@ -157,11 +158,11 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
             arr[1] = 0;
             arr[2] = 0;
             token = strtok(NULL, delimiters);
-            char *path = (char *)malloc(sizeof(char)*1024);
-            char *seek_name = (char *)malloc(sizeof(char)*1024);
-            path="";
-            seek_name="";
-            int flag=0;
+            char *path = (char *)malloc(sizeof(char) * 1024);
+            char *seek_name = (char *)malloc(sizeof(char) * 1024);
+            path = "";
+            seek_name = "";
+            int flag = 0;
             while (token != NULL)
             {
                 if (token[0] == '-')
@@ -189,14 +190,14 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                 // }
                 else
                 {
-                    if(flag==0)
+                    if (flag == 0)
                     {
-                        flag=1;
-                        seek_name=token;
+                        flag = 1;
+                        seek_name = token;
                     }
                     else
                     {
-                        path=token;
+                        path = token;
                     }
                 }
                 token = strtok(NULL, delimiters);
@@ -220,7 +221,41 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
         }
         else
         {
-            printf("wrong input\n");
+            // printf("wrong input\n");
+            // now over here i need to implement mine sixth functionality
+            pid_t pid = fork();
+            if (pid < 0)
+            {
+                perror("fork");
+                return;
+            }
+            else if (pid == 0)
+            {
+                char *arr[100]; // i am assuming that no of arguments cant exceed 100
+                int i = 0;
+                while (token != NULL && i <= 99)
+                {
+                    arr[i] = token;
+                    i++;
+
+                    token = strtok(NULL, delimiters);
+                }
+                arr[i] = NULL;
+                // for (int j = 0; j <i; j++)
+                // {
+                //     printf("%s\n",arr[j]);
+                // }
+
+                if (execvp(arr[0], arr) < 0)
+                {
+                    printf("Invalid Command\n");
+                }
+            }
+            else if (pid > 0)
+            {
+                wait(NULL); // its because i want to execute the child process before the parent
+            }
+            return;
         }
         // for (int i = 0; i < q->size; i++)
         // {
