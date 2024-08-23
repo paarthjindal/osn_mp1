@@ -1,5 +1,6 @@
 #include "input_requirement.h"
 #include "log_commands.h"
+#include "seek.h"
 
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
@@ -189,7 +190,18 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
             {
                 path = ".";
             }
-            
+            if (arr[0] == 1 && arr[1] == 1)
+            {
+                printf("Invalid flags\n");
+            }
+            else
+            {
+                char *resolved_path_seek = resolve_path_seek(path, home_dir, prev_dir);
+
+                seek(resolved_path_seek, seek_name, arr[0], arr[1], arr[2]);
+
+                free(resolved_path_seek);
+            }
         }
         else
         {
