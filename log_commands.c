@@ -4,6 +4,8 @@
 #define max_length 256
 #define max_size 15
 
+// deque is not begin used currently
+
 queue *create_queue(queue *q)
 {
     q = (queue *)malloc(sizeof(queue));
@@ -45,7 +47,7 @@ void enqueue(queue *q, char *command)
     }
     q->rear = (q->rear + 1) % 15;
 
-    strcpy(q->log[q->size-1], command);
+    strcpy(q->log[q->rear], command);
 }
 
 void dequeue(queue *q)

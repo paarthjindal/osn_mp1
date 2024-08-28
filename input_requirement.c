@@ -11,8 +11,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
 
     char *token = strtok(s, delimiters);
     while (token != NULL)
-    {
-        // Print each token (for demonstration purposes)
+    { 
         printf("Token: %s\n", token);
         // printf("%s\n", y);
 
@@ -233,13 +232,19 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
             {
                 char *arr[100]; // i am assuming that no of arguments cant exceed 100
                 int i = 0;
+                int is_background = 0;
                 while (token != NULL && i <= 99)
                 {
+                    if (strcmp(token, "&") == 0)
+                    {
+                        is_background = 1;
+                    }
                     arr[i] = token;
                     i++;
 
                     token = strtok(NULL, delimiters);
                 }
+                printf("is it a background %d", is_background);
                 arr[i] = NULL;
                 // for (int j = 0; j <i; j++)
                 // {

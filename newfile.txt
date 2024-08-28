@@ -1,15 +1,15 @@
-echo "hello world"
-seek newfile.txt
-echo "hello you are so good"
+seek newfile ~/lesgo
+seek newfile ~/lesgo/newfile
+echo whats
+reveal
+hop lesgo/test/wht
+hop
+echo whats
+proclore 5
 hop lesgo
-seek lesgo
-echo "hello adda addakv adnal ddva va"
-hop lesgo ; reveal ; hop lesgo
-no give me error
-seek newfile lesgo
-what
-sleep hello
-sleep what
-sleep no
-sleep normal
-seek newfile lesgo/lesgo/newfile
+lgo
+hello
+hop lesgo/test
+lgo
+seek newfile -f ./lesgo
+hop lesgo/test/why
