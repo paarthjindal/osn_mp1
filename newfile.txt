@@ -1,15 +1,15 @@
-seek newfile & ;hop ; reveal &
-hop&
-hop
-hop ; reveal
-hop ; reveal &
-sleep 10 &
-hop lesgo
-hop est
-hop test
+hop test &
 sleep 5 &
+hop lesgo
+hop test
+sleep 3 &
 echo hello &
-hi
-sleep 5 & ; reveal
+hop lesgo
 hop
-proclore
+echo lorre&
+what
+reveal -l -a
+reveal -l -a ./lesgo
+reveal -l 0a ./lesgo/test
+reveal -l -a ./lesgo/test
+seek newfile

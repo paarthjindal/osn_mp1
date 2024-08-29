@@ -12,7 +12,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
     char *token = strtok(s, delimiters);
     while (token != NULL)
     { 
-        printf("Token: %s\n", token);
+        // printf("Token: %s\n", token);
         // printf("%s\n", y);
 
         // Check if the first token is "EXIT"

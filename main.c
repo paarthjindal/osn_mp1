@@ -10,6 +10,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+typedef struct back_proc_list
+{
+    char process_name[256];
+    pid_t process_id;
+
+} back_proc_list;
+
+// Assuming maximum number of background processes is 256
+back_proc_list background_process_list[256];
+int process_count = 0; // Track the number of background processes
+
 // Signal handler for SIGCHLD
 void sigchld_handler(int sig)
 {
@@ -19,13 +30,25 @@ void sigchld_handler(int sig)
     // Loop to handle all terminated child processes
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
     {
-        if (WIFEXITED(status))
+        // Find the process name using the PID
+        for (int i = 0; i < process_count; i++)
         {
-            printf("Process with PID %d ended normally with exit status %d\n", pid, WEXITSTATUS(status));
-        }
-        else if (WIFSIGNALED(status))
-        {
-            printf("Process with PID %d ended abnormally due to signal %d\n", pid, WTERMSIG(status));
+            if (background_process_list[i].process_id == pid)
+            {
+                if (WIFEXITED(status))
+                {
+                    printf("Process '%s' with PID %d ended normally with exit status %d\n",
+                           background_process_list[i].process_name, pid, WEXITSTATUS(status));
+                }
+                else if (WIFSIGNALED(status))
+                {
+                    printf("Process '%s' with PID %d ended abnormally due to signal %d\n",
+                           background_process_list[i].process_name, pid, WTERMSIG(status));
+                }
+                // Remove the process from the list (optional)
+                background_process_list[i] = background_process_list[--process_count]; // Replace with last element
+                break;
+            }
         }
     }
 }
@@ -33,7 +56,6 @@ void sigchld_handler(int sig)
 int main()
 {
     // Set up the SIGCHLD signal handler
-    // i have included signal.h library overe here but still it is showing me erorr in the following lines
     struct sigaction sa;
     sa.sa_handler = sigchld_handler;
     sa.sa_flags = SA_RESTART | SA_NOCLDSTOP; // Restart interrupted system calls and don't call handler when children stop
@@ -92,7 +114,7 @@ int main()
 
         char *temp = strtok(input, ";");
         char *arr[256];
-        int count = 0;
+        int command_count = 0; // Track the number of commands
         int background[256] = {0};
 
         while (temp != NULL)
@@ -107,17 +129,17 @@ int main()
 
             if (len > 0 && temp[len - 1] == '&')
             {
-                background[count] = 1;
+                background[command_count] = 1;
                 temp[len - 1] = '\0';
             }
 
-            arr[count] = temp;
-            count++;
+            arr[command_count] = temp;
+            command_count++;
 
             temp = strtok(NULL, ";");
         }
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < command_count; i++)
         {
             if (background[i] == 1)
             {
@@ -149,7 +171,12 @@ int main()
                 else
                 {
                     // Parent process continues to the next command
-                    printf("%d\n", back_process);
+                    background_process_list[process_count].process_id = back_process;
+                    strncpy(background_process_list[process_count].process_name, arr[i], 255);
+                    background_process_list[process_count].process_name[255] = '\0'; // Ensure null-terminated string
+                    process_count++;
+
+                    printf("Background process started: PID %d\n", back_process);
                 }
             }
             else

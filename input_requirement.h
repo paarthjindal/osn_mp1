@@ -15,6 +15,7 @@
 #include "hop.h"
 #include "reveal.h"
 
+
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir);
 
 void write_queue_to_file(queue *q, const char *filename, const char *home_dir);
