@@ -106,7 +106,7 @@ void reveal(const char *path, int show_all, int long_format)
     DIR *dir = opendir(path);
     if (!dir)
     {
-        perror("opendir failed");
+        perror("opendir failed erorr");
         return;
     }
 

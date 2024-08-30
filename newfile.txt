@@ -1,15 +1,15 @@
-hop test &
-sleep 5 &
-hop lesgo
-hop test
-sleep 3 &
-echo hello &
-hop lesgo
-hop
-echo lorre&
-what
+seek -f newfile ~/
+seek newfile
+reveal
+reveal -l
+reveal -l -a
+reveal
+hop 	lesgo ; proclore
+reveal -l
+reveal -l 0a
+reveal -l 0a
 reveal -l -a
 reveal -l -a ./lesgo
-reveal -l 0a ./lesgo/test
-reveal -l -a ./lesgo/test
-seek newfile
+reveal -l -a lesgo
+reveal
+reveal -l -a lesgo/lesgo

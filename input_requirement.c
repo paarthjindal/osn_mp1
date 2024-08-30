@@ -2,6 +2,8 @@
 #include "log_commands.h"
 #include "seek.h"
 
+// dont know for some reason there is infinte loop going on if i type yes in the command line
+
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
     char delimiters[] = " \t";
@@ -10,6 +12,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
     // printf("%s\n",s);
 
     char *token = strtok(s, delimiters);
+    
     while (token != NULL)
     { 
         // printf("Token: %s\n", token);
@@ -250,6 +253,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
 
                 if (execvp(arr[0], arr) < 0)
                 {
+                    // printf("hello\n");
                     printf("Invalid Command\n");
                 }
             }

@@ -6,6 +6,10 @@
 #include <string.h>
 #include <libgen.h> // For basename function (POSIX)
 
+
+// i am assumming that while printing i am printing the whole path instead of mentioned in doc that cwd should be replaced by ./
+// cause according to me both almost means the same thinng so should not be an issue
+
 #define MAX_PATH 1024
 
 char *resolve_path_seek(char *input, char *home_dir, char *prev_dir)
@@ -161,7 +165,22 @@ int search_directory(const char *resolved_path_seek, const char *seek_name, int 
 void seek(char *resolved_path_seek, char *seek_name, int a, int b, int c)
 {
     char found_path[MAX_PATH];
-    printf("%s\n", resolved_path_seek);
+    if(a<0)
+    {
+        printf("error");
+        return;
+    }
+    if(b<0)
+    {
+        printf("error");
+        return;
+    }
+    if(c<0)
+    {
+        printf("error");
+        return;
+    }
+    // printf("%s\n", resolved_path_seek);
 
     int match_count = search_directory(resolved_path_seek, seek_name, a, b, c, found_path);
     // printf("what \n");

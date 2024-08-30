@@ -99,6 +99,10 @@ int main()
             exit(EXIT_FAILURE);
         }
         int size = strlen(input);
+        if (size == 0 || (size == 1 && input[0] == '\n'))
+        {
+            continue; // No input, just prompt again
+        }
         input[size - 1] = '\0';
 
         char save[256];
@@ -113,12 +117,35 @@ int main()
         write_queue_to_file(q, filename, save_dir);
 
         char *temp = strtok(input, ";");
-        char *arr[256];
+        char arr[256][256];
         int command_count = 0; // Track the number of commands
         int background[256] = {0};
 
+        // while (temp != NULL)
+        // {
+        //     while (*temp == ' ' || *temp == '\t')
+        //         temp++;
+        //     int len = strlen(temp);
+        //     while (len > 0 && (temp[len - 1] == ' ' || temp[len - 1] == '\t'))
+        //     {
+        //         temp[--len] = '\0';
+        //     }
+
+        //     if (len > 0 && temp[len - 1] == '&')
+        //     {
+        //         background[command_count] = 1;
+        //         temp[len - 1] = '\0';
+        //     }
+
+        //     arr[command_count] = temp;
+        //     command_count++;
+
+        //     temp = strtok(NULL, ";");
+        // }
+
         while (temp != NULL)
         {
+            // Trim leading and trailing whitespace
             while (*temp == ' ' || *temp == '\t')
                 temp++;
             int len = strlen(temp);
@@ -127,15 +154,54 @@ int main()
                 temp[--len] = '\0';
             }
 
-            if (len > 0 && temp[len - 1] == '&')
+            char *current_part = temp;
+            int i = 0;
+            // printf("stdghghj\n");
+            // printf("%s\n",current_part);
+
+            // Traverse the string to find '&'
+            while (i < len)
             {
-                background[command_count] = 1;
-                temp[len - 1] = '\0';
+                if (current_part[i] == '&')
+                {
+                    // Allocate memory and store the part before '&'
+                     // Allocate memory for the substring
+                    // if (arr[command_count] != NULL)
+                    {
+                        strncpy(arr[command_count], current_part, i); // Copy the substring from current_part
+                        arr[command_count][i] = '\0';                 // Null-terminate the string
+                        background[command_count] = 1;                // Mark as background
+                        command_count++;
+                    }
+
+                    // Move to the part after '&'
+                    current_part = temp + i + 1;
+                    // printf("%s\n",current_part);
+                    // Trim leading whitespace after '&'
+                    // while (*current_part == ' ' || *current_part == '\t')
+                    //     current_part++;
+                    len = strlen(current_part);
+                    // i = 0; 
+                }
+                else
+                {
+                    i++;
+                }
             }
 
-            arr[command_count] = temp;
-            command_count++;
+            // If there's still a part left after the last '&', add it as a foreground command
+            if (*current_part != '\0')
+            {
+                
+                // if (arr[command_count] != NULL)
+                {
+                    strcpy(arr[command_count], current_part);
+                    background[command_count] = 0; // Mark as foreground
+                    command_count++;
+                }
+            }
 
+            // Move to the next tokenized command by ';'
             temp = strtok(NULL, ";");
         }
 
