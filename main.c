@@ -1,3 +1,4 @@
+#include "main.h"
 #define _XOPEN_SOURCE 700
 
 #include "display_requirement.h"
@@ -16,15 +17,9 @@
 #include <time.h>
 #include <fcntl.h>
 
-typedef struct back_proc_list
-{
-    char process_name[256];
-    pid_t process_id;
-
-} back_proc_list;
-
 // Assuming maximum number of background processes is 256
 back_proc_list background_process_list[256];
+// used in activites.h
 int process_count = 0; // Track the number of background processes
 
 // Signal handler for SIGCHLD
@@ -36,7 +31,7 @@ void sigchld_handler(int sig)
     // Loop to handle all terminated child processes
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
     {
-        // Find the process name using the PID
+        // Find the process in the background process list
         for (int i = 0; i < process_count; i++)
         {
             if (background_process_list[i].process_id == pid)
@@ -51,15 +46,14 @@ void sigchld_handler(int sig)
                     printf("Process '%s' with PID %d ended abnormally due to signal %d\n",
                            background_process_list[i].process_name, pid, WTERMSIG(status));
                 }
-                // Remove the process from the list (optional)
-                background_process_list[i] = background_process_list[--process_count]; // Replace with last element
+
+                // Mark the process as Stopped
+                background_process_list[i].is_running = 0;
                 break;
             }
         }
     }
 }
-
-
 
 int main()
 {
@@ -97,7 +91,7 @@ int main()
     while (flag)
     {
         // Update and display the prompt
-    
+
         prompt(save_dir);
 
         // Read user input and store in input
@@ -151,6 +145,7 @@ int main()
 
         //     temp = strtok(NULL, ";");
         // }
+        // printf("current process count is %d", process_count);
 
         while (temp != NULL)
         {
@@ -242,11 +237,24 @@ int main()
                 }
                 else
                 {
-                    // Parent process continues to the next command
+                    // Update process information after the fork is successful
+                    sigset_t mask, old_mask;
+
+                    // Block SIGCHLD temporarily while updating process_count to avoid race conditions
+                    sigemptyset(&mask);
+                    sigaddset(&mask, SIGCHLD);
+                    sigprocmask(SIG_BLOCK, &mask, &old_mask);
+
+                    // Store the background process details
                     background_process_list[process_count].process_id = back_process;
                     strncpy(background_process_list[process_count].process_name, arr[i], 255);
-                    background_process_list[process_count].process_name[255] = '\0'; // Ensure null-terminated string
-                    process_count++;
+                    background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
+                    background_process_list[process_count].is_running=1;
+
+                    process_count++; // Safely increment process_count
+
+                    // Unblock SIGCHLD after updating process list
+                    sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
                     printf("Background process started: PID %d\n", back_process);
                 }
@@ -258,7 +266,7 @@ int main()
                 struct timespec start_time, end_time;
                 clock_gettime(CLOCK_MONOTONIC, &start_time); // Record the start time
 
-                execute_terminal(arr[i], q, &flag, home_dir, prev_dir); 
+                execute_terminal(arr[i], q, &flag, home_dir, prev_dir);
                 // handle_io_redirection_and_piping(arr[i],0,q,&flag,home_dir,prev_dir);
 
                 clock_gettime(CLOCK_MONOTONIC, &end_time); // Record the end time

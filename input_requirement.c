@@ -1,21 +1,11 @@
-#include "input_requirement.h"
-#include "log_commands.h"
+
 #include "seek.h"
 #include <fcntl.h>
 #include <stdlib.h>
-
+#include "main.h"
 // dont know for some reason there is infinte loop going on if i type yes in the command line
 
-void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir);
-void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir);
-void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir);
-int handle_redirection(char *cmd);
-void execute_single_command(char *command, queue *q, int *flag, char *home_dir, char *prev_dir);
-void write_queue_to_file(queue *q, const char *filename, const char *home_dir);
-void read_queue_from_file(queue *q, const char *filename, const char *home_dir);
-// Function to handle input/output redirection
-int handle_redirection(char *cmd)
-{
+int handle_redirection(char *cmd) {
     char *infile = NULL, *outfile = NULL;
     int append = 0; // for '>>' case
     char *token;
@@ -69,6 +59,7 @@ int handle_redirection(char *cmd)
 
     return 0;
 }
+
 void restore_io(int saved_stdin, int saved_stdout)
 {
     dup2(saved_stdin, STDIN_FILENO);
@@ -82,7 +73,8 @@ void execute_single_command(char *command, queue *q, int *flag, char *home_dir, 
     int saved_stdout = dup(STDOUT_FILENO);
 
     // Handle redirection if any
-    if (handle_redirection(command) == -1) {
+    if (handle_redirection(command) == -1)
+    {
         perror("Redirection failed");
         return;
     }
@@ -101,9 +93,9 @@ void execute_single_command(char *command, queue *q, int *flag, char *home_dir, 
 //     while (commands[i] != NULL)
 //     {
 //         pipe(fd); // Create a pipe for the current command
-        
+
 //         pid_t pid = fork();
-        
+
 //         if (pid == 0)
 //         {
 //             // Child process: Set up the pipes
@@ -140,16 +132,20 @@ void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir
     while (commands[i] != NULL)
     {
         // Create a pipe for the current command
-        if (commands[i + 1] != NULL) {
-            if (pipe(fd) == -1) {
+        if (commands[i + 1] != NULL)
+        {
+            if (pipe(fd) == -1)
+            {
                 perror("Pipe failed");
                 exit(1);
             }
         }
 
         // Redirect input from previous command (if any)
-        if (in_fd != 0) {
-            if (dup2(in_fd, STDIN_FILENO) == -1) {
+        if (in_fd != 0)
+        {
+            if (dup2(in_fd, STDIN_FILENO) == -1)
+            {
                 perror("dup2 failed for stdin");
                 exit(1);
             }
@@ -157,8 +153,10 @@ void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir
         }
 
         // If there's a next command, redirect output to the pipe
-        if (commands[i + 1] != NULL) {
-            if (dup2(fd[1], STDOUT_FILENO) == -1) {
+        if (commands[i + 1] != NULL)
+        {
+            if (dup2(fd[1], STDOUT_FILENO) == -1)
+            {
                 perror("dup2 failed for stdout");
                 exit(1);
             }
@@ -169,8 +167,9 @@ void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir
         execute_single_command(commands[i], q, flag, home_dir, prev_dir);
 
         // After execution, restore standard output and input
-        if (commands[i + 1] != NULL) {
-            close(fd[1]); // Close write end of the pipe
+        if (commands[i + 1] != NULL)
+        {
+            close(fd[1]);  // Close write end of the pipe
             in_fd = fd[0]; // Save read end of the pipe for the next command
         }
 
@@ -185,10 +184,10 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
     char *command;
     char save_original_command[256];
     int pipe_count = 0;
-    
+
     // Copy the original command to preserve it
     strcpy(save_original_command, s);
-    
+
     // Tokenize the string into separate commands based on the pipe symbol "|"
     command = strtok(save_original_command, "|");
     while (command != NULL)
@@ -196,16 +195,15 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
         // Store each command in the array
         split_into_pipes[pipe_count] = command;
         pipe_count++;
-        
+
         // Continue tokenizing to the next command
-        command = strtok(NULL, "|");  // This should be NULL to continue parsing the original string
+        command = strtok(NULL, "|"); // This should be NULL to continue parsing the original string
     }
     split_into_pipes[pipe_count] = NULL; // Mark the end of the command array
-    
+
     // Execute the commands using the piped execution function
     execute_piped_commands(split_into_pipes, q, flag, home_dir, prev_dir);
 }
-
 
 void write_queue_to_file(queue *q, const char *filename, const char *home_dir)
 {
@@ -474,8 +472,10 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
                 free(resolved_path_seek);
             }
         }
-        else if (strcmp(token, "activites") == 0)
+        else if (strcmp(token, "activities") == 0)
         {
+            printf("hek");
+            print_activities();
         }
         else if (strcmp(token, "bg") == 0)
         {

@@ -1,15 +1,15 @@
-cat mehul.txt
-hop ..
-cat mehul.txt
-ls
-echo hello >mehul.txt
-echo what > mehul.txt
-echo no >>mehul.txt
+hop leso
+h
 hop lesgo
-hop lesgo >>mehul.txt
-echo what do you mean>>newfile.txt
+activities
+sleep 1 &
+sleep 2 &
+activities
+sleep 3 &
+activities
+sleep 10 &
+activities
 hop lesgo
-hop lesgo
-reveal
-cat newfile.txt
-echo "what">newfile.txt
+sleep 1&
+activities
+sleep 8 & ; sleep 10 &
