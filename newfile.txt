@@ -1,15 +1,15 @@
-hop leso
-h
-hop lesgo
+
+[A
+sleep 20
 activities
-sleep 1 &
-sleep 2 &
+activitie
+EXIT
+sleep 67
+sleep 34
 activities
-sleep 3 &
-activities
-sleep 10 &
-activities
-hop lesgo
 sleep 1&
 activities
-sleep 8 & ; sleep 10 &
+sleep 45
+sleep 34
+sleep 2&
+EXIT

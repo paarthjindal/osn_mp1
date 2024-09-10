@@ -20,7 +20,8 @@
 #include <fcntl.h>
 #include "activites.h"
 #include "log_commands.h"
-
+#include "signals.h"
+#include <errno.h>
 
 typedef struct back_proc_list
 {
@@ -29,8 +30,15 @@ typedef struct back_proc_list
     int is_running; // 1 for Running, 0 for Stopped according to convention 
 } back_proc_list;
 
+typedef struct fore_proc_list
+{
+    char process_name[256];
+    pid_t process_id;
+}fore_process_list;
 
 extern back_proc_list background_process_list[256];
+
+extern fore_process_list foreground_process_pid;
 
 
 #endif

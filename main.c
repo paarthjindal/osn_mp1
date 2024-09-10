@@ -8,14 +8,6 @@
 #include "pipes.h"
 #include "i_o_redirection.h"
 #include "redirection_along_with_pipes.h"
-#include <sys/types.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
-#include <fcntl.h>
 
 // Assuming maximum number of background processes is 256
 back_proc_list background_process_list[256];
@@ -54,9 +46,76 @@ void sigchld_handler(int sig)
         }
     }
 }
+fore_process_list foreground_process_pid;
+void initialize_foreground_process_pid() {
+    foreground_process_pid.process_id = -1;
+}
+// foreground_process_pid.process_id=-1;
 
+// Signal handler for SIGINT
+// Signal handler for SIGINT (Ctrl+C)
+void ctrlc_handler(int sig)
+{
+    if (foreground_process_pid.process_id != -1)
+    {
+        // If a foreground process exists, send SIGINT to it
+        kill(foreground_process_pid.process_id, SIGINT);
+        printf("\nForeground process with PID %d interrupted\n", foreground_process_pid.process_id);
+        foreground_process_pid.process_id = -1; // Reset the foreground process PID after sending SIGINT
+    }
+    else
+    {
+        // No foreground process, just print a new line and display prompt
+        printf("\n");
+        fflush(stdout);          // Ensure prompt is printed immediately
+    }
+}
+
+// Signal handler for SIGTSTP
+void ctrlz_handler(int sig)
+{
+    if (foreground_process_pid.process_id != -1)
+    {
+        kill(foreground_process_pid.process_id, SIGTSTP);
+
+        background_process_list[process_count].process_id = foreground_process_pid.process_id;
+                    strncpy(background_process_list[process_count].process_name, foreground_process_pid.process_name, 255);
+                    background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
+                    background_process_list[process_count].is_running = 0;
+
+                    process_count++;
+        
+        printf("\nForeground process stopped\n");
+    }
+    else
+    {
+        printf("\nShell: No foreground process to interrupt\n");
+        fflush(stdout);
+    }
+}
+
+void ctrld_handler(int sig)
+{
+}
+
+void get_input(char *buffer, size_t size)
+{
+    int result;
+    do
+    {
+        errno = 0; // Clear errno before the input call
+        result = fgets(buffer, size, stdin) == NULL;
+        if (result == -1 && errno == EINTR)
+        {
+            // Interrupted by a signal, retry the input operation
+            printf("\nInput interrupted by signal, please retry.\n");
+        }
+    } while (result == -1 && errno == EINTR); // Retry if interrupted by signal
+}
 int main()
 {
+    initialize_foreground_process_pid();
+
     // Set up the SIGCHLD signal handler
     struct sigaction sa;
     sa.sa_handler = sigchld_handler;
@@ -93,14 +152,17 @@ int main()
         // Update and display the prompt
 
         prompt(save_dir);
-
+        signal(SIGINT, ctrlc_handler);  // Handle Ctrl+C
+        signal(SIGTSTP, ctrlz_handler); // Handle Ctrl+Z
         // Read user input and store in input
         char input[256];
-        if (fgets(input, sizeof(input), stdin) == NULL)
-        {
-            perror("error in taking input from the user");
-            exit(EXIT_FAILURE);
-        }
+        // if (fgets(input, sizeof(input), stdin) == NULL)
+        // {
+        //     perror("error in taking input from the user");
+        //     exit(EXIT_FAILURE);
+        // }
+        fflush(stdout);
+        get_input(input, 256);
         int size = strlen(input);
         if (size == 0 || (size == 1 && input[0] == '\n'))
         {
@@ -123,29 +185,6 @@ int main()
         char arr[256][1024];
         int command_count = 0; // Track the number of commands
         int background[256] = {0};
-
-        // while (temp != NULL)
-        // {
-        //     while (*temp == ' ' || *temp == '\t')
-        //         temp++;
-        //     int len = strlen(temp);
-        //     while (len > 0 && (temp[len - 1] == ' ' || temp[len - 1] == '\t'))
-        //     {
-        //         temp[--len] = '\0';
-        //     }
-
-        //     if (len > 0 && temp[len - 1] == '&')
-        //     {
-        //         background[command_count] = 1;
-        //         temp[len - 1] = '\0';
-        //     }
-
-        //     arr[command_count] = temp;
-        //     command_count++;
-
-        //     temp = strtok(NULL, ";");
-        // }
-        // printf("current process count is %d", process_count);
 
         while (temp != NULL)
         {
@@ -249,7 +288,7 @@ int main()
                     background_process_list[process_count].process_id = back_process;
                     strncpy(background_process_list[process_count].process_name, arr[i], 255);
                     background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
-                    background_process_list[process_count].is_running=1;
+                    background_process_list[process_count].is_running = 1;
 
                     process_count++; // Safely increment process_count
 

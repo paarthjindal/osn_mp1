@@ -4,7 +4,6 @@
 #define y 256
 #define z 256
 
-
 #define RESET_COLOR "\033[0m"
 #define USER_COLOR "\033[34m" // Blue
 #define HOST_COLOR "\033[32m" // Green
@@ -12,6 +11,7 @@
 
 void prompt(char *home_dir)
 {
+ 
     char cwd[x];
     char *relative_dir;
 
@@ -57,7 +57,7 @@ void prompt(char *home_dir)
     }
 
     // Display the prompt with colors
-    printf("%s<%s%s%s@%s%s%s:%s%s%s>%s ", 
+    printf("%s<%s%s%s@%s%s%s:%s%s%s>%s ",
            RESET_COLOR,
            USER_COLOR, username,
            RESET_COLOR,

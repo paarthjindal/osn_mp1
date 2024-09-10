@@ -1,11 +1,10 @@
-
 #include "seek.h"
-#include <fcntl.h>
-#include <stdlib.h>
 #include "main.h"
 // dont know for some reason there is infinte loop going on if i type yes in the command line
 
-int handle_redirection(char *cmd) {
+
+int handle_redirection(char *cmd)
+{
     char *infile = NULL, *outfile = NULL;
     int append = 0; // for '>>' case
     char *token;
@@ -86,45 +85,7 @@ void execute_single_command(char *command, queue *q, int *flag, char *home_dir, 
     restore_io(saved_stdin, saved_stdout);
 }
 
-// void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
-// {
-//     int i = 0, fd[2], in_fd = 0;
 
-//     while (commands[i] != NULL)
-//     {
-//         pipe(fd); // Create a pipe for the current command
-
-//         pid_t pid = fork();
-
-//         if (pid == 0)
-//         {
-//             // Child process: Set up the pipes
-//             dup2(in_fd, STDIN_FILENO); // Take input from the previous command
-//             if (commands[i + 1] != NULL)
-//             {
-//                 dup2(fd[1], STDOUT_FILENO); // Send output to the next command
-//             }
-//             close(fd[0]);
-//             close(fd[1]); // Close unused write end
-//             execute_single_command(commands[i], q, flag, home_dir, prev_dir); // Execute the command
-//             exit(0); // Ensure child exits after executing the command
-//         }
-//         else if (pid > 0)
-//         {
-//             // Parent process: Wait for child to finish
-//             wait(NULL);
-//             close(fd[1]); // Close the write end of the pipe (child already used it)
-//             in_fd = fd[0]; // Save the read end of the pipe for the next command
-//             i++; // Move to the next command
-//         }
-//         else
-//         {
-//             // Handle fork error
-//             perror("Fork failed");
-//             exit(1);
-//         }
-//     }
-// }
 void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
     int i = 0, fd[2], in_fd = 0;
@@ -268,6 +229,7 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
         {
 
             *flag = 0;
+            exit(1);
             printf("thanks for using mine terminal , hope you had a pleasant experience\n");
             break;
         }
@@ -474,7 +436,7 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
         }
         else if (strcmp(token, "activities") == 0)
         {
-            printf("hek");
+            // printf("hek");
             print_activities();
         }
         else if (strcmp(token, "bg") == 0)
@@ -519,11 +481,28 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
                 }
             }
         }
+        else if (strcmp(token, "ping") == 0)
+        {
+            char *pid_str = strtok(NULL, " \t");
+            char *signal_num_str = strtok(NULL, " \t");
+            if (pid_str != NULL && signal_num_str != NULL)
+            {
+                handle_ping(pid_str, signal_num_str);
+            }
+            else
+            {
+                printf("Usage: ping <pid> <signal_number>\n");
+            }
+        }
         else
         {
             // printf("wrong input\n");
             // now over here i need to implement mine sixth functionality
             pid_t pid = fork();
+            foreground_process_pid.process_id=pid;
+            // foreground_process_pid.process_name=arr;
+            strncpy(foreground_process_pid.process_name, y, 255);
+                    foreground_process_pid.process_name[255] = '\0'; // Null-terminate string
             if (pid < 0)
             {
                 perror("fork");
