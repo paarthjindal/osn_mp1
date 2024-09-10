@@ -1,15 +1,15 @@
-seek -f newfile ~/
-seek newfile
+cat mehul.txt
+hop ..
+cat mehul.txt
+ls
+echo hello >mehul.txt
+echo what > mehul.txt
+echo no >>mehul.txt
+hop lesgo
+hop lesgo >>mehul.txt
+echo what do you mean>>newfile.txt
+hop lesgo
+hop lesgo
 reveal
-reveal -l
-reveal -l -a
-reveal
-hop 	lesgo ; proclore
-reveal -l
-reveal -l 0a
-reveal -l 0a
-reveal -l -a
-reveal -l -a ./lesgo
-reveal -l -a lesgo
-reveal
-reveal -l -a lesgo/lesgo
+cat newfile.txt
+echo "what">newfile.txt

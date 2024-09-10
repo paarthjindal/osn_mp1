@@ -14,7 +14,8 @@
 
 char *resolve_path_seek(char *input, char *home_dir, char *prev_dir)
 {
-    char *path = (char *)malloc(MAX_PATH * sizeof(char));
+    
+    char *path = (char *)malloc(MAX_PATH * sizeof(char)); // Dynamically allocate memory
     if (strncmp(input, "~/", 2) == 0)
     {
         snprintf(path, 1024, "%s%s", home_dir, input + 1);
@@ -64,6 +65,7 @@ char *resolve_path_seek(char *input, char *home_dir, char *prev_dir)
         {
             perror("getcwd() error");
         }
+        
     }
     else
     {
@@ -76,7 +78,7 @@ char *resolve_path_seek(char *input, char *home_dir, char *prev_dir)
             perror("getcwd() error");
         }
     }
-
+    // printf("%s",path);
     return path;
 }
 
@@ -187,7 +189,7 @@ void seek(char *resolved_path_seek, char *seek_name, int a, int b, int c)
     printf("%d\n", match_count);
     if (match_count == 0)
     {
-        printf("no specified file or directory found\n");
+        printf("No Match Found!\n");
         return;
     }
 

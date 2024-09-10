@@ -67,16 +67,23 @@ void dispaly_log(queue *q)
 {
     if (q->size == 0)
     {
-        printf("the log is empty\n");
+        printf("The log is empty\n");
     }
     else
     {
-        for (int i = q->front; i < q->size; i++)
+        int i = q->front;
+        int count = 0;
+
+        while (count < q->size)
         {
             printf("%s\n", q->log[i]);
+            i = (i + 1) % max_size; // Wrap around if needed
+            count++;
         }
     }
 }
+
+// i am handling mine execute function in the main function
 
 void execute(queue *q, int index)
 {

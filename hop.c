@@ -28,7 +28,7 @@ char *resolve_path(char *input, char *home_dir, char *prev_dir)
         }
         else
         {
-            printf("hop: no previous directory\n");
+            printf("no previous dir existx");
             strcpy(path, home_dir); // Default to home directory if no previous directory
         }
     }
@@ -84,6 +84,7 @@ char *resolve_path(char *input, char *home_dir, char *prev_dir)
 // Function to change directory and print the current directory
 void hop(char *input, char *home_dir, char *prev_dir)
 {
+    // printf("%s why\n",input);
     // Get the current directory before changing
     char current_dir[MAX_PATH];
     if (getcwd(current_dir, MAX_PATH) == NULL)
@@ -129,6 +130,8 @@ void hop(char *input, char *home_dir, char *prev_dir)
     {
         perror("getcwd failed");
     }
+    // printf("%s\n", home_dir);
+    // printf("%s\n", prev_dir);
 
     free(path);
 }

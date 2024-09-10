@@ -1,24 +1,271 @@
 #include "input_requirement.h"
 #include "log_commands.h"
 #include "seek.h"
+#include <fcntl.h>
+#include <stdlib.h>
 
 // dont know for some reason there is infinte loop going on if i type yes in the command line
 
+void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir);
+void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir);
+void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir);
+int handle_redirection(char *cmd);
+void execute_single_command(char *command, queue *q, int *flag, char *home_dir, char *prev_dir);
+void write_queue_to_file(queue *q, const char *filename, const char *home_dir);
+void read_queue_from_file(queue *q, const char *filename, const char *home_dir);
+// Function to handle input/output redirection
+int handle_redirection(char *cmd)
+{
+    char *infile = NULL, *outfile = NULL;
+    int append = 0; // for '>>' case
+    char *token;
+    int fd;
+
+    // Handling input redirection
+    if ((token = strstr(cmd, "<")))
+    {
+        *token = '\0';
+        infile = strtok(token + 1, " \t");
+    }
+
+    // Handling output redirection
+    if ((token = strstr(cmd, ">>")))
+    {
+        *token = '\0';
+        outfile = strtok(token + 2, " \t");
+        append = 1;
+    }
+    else if ((token = strstr(cmd, ">")))
+    {
+        *token = '\0';
+        outfile = strtok(token + 1, " \t");
+    }
+
+    // Handle input file
+    if (infile)
+    {
+        fd = open(infile, O_RDONLY);
+        if (fd < 0)
+        {
+            perror("open");
+            return -1;
+        }
+        dup2(fd, STDIN_FILENO);
+        close(fd);
+    }
+
+    // Handle output file
+    if (outfile)
+    {
+        fd = open(outfile, O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC), 0644);
+        if (fd < 0)
+        {
+            perror("open");
+            return -1;
+        }
+        dup2(fd, STDOUT_FILENO);
+        close(fd);
+    }
+
+    return 0;
+}
+void restore_io(int saved_stdin, int saved_stdout)
+{
+    dup2(saved_stdin, STDIN_FILENO);
+    dup2(saved_stdout, STDOUT_FILENO);
+    close(saved_stdin);
+    close(saved_stdout);
+}
+void execute_single_command(char *command, queue *q, int *flag, char *home_dir, char *prev_dir)
+{
+    int saved_stdin = dup(STDIN_FILENO);
+    int saved_stdout = dup(STDOUT_FILENO);
+
+    // Handle redirection if any
+    if (handle_redirection(command) == -1) {
+        perror("Redirection failed");
+        return;
+    }
+
+    // Execute command after handling redirection
+    execute_final_terminal(command, q, flag, home_dir, prev_dir);
+
+    // Restore original I/O for the next command
+    restore_io(saved_stdin, saved_stdout);
+}
+
+// void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
+// {
+//     int i = 0, fd[2], in_fd = 0;
+
+//     while (commands[i] != NULL)
+//     {
+//         pipe(fd); // Create a pipe for the current command
+        
+//         pid_t pid = fork();
+        
+//         if (pid == 0)
+//         {
+//             // Child process: Set up the pipes
+//             dup2(in_fd, STDIN_FILENO); // Take input from the previous command
+//             if (commands[i + 1] != NULL)
+//             {
+//                 dup2(fd[1], STDOUT_FILENO); // Send output to the next command
+//             }
+//             close(fd[0]);
+//             close(fd[1]); // Close unused write end
+//             execute_single_command(commands[i], q, flag, home_dir, prev_dir); // Execute the command
+//             exit(0); // Ensure child exits after executing the command
+//         }
+//         else if (pid > 0)
+//         {
+//             // Parent process: Wait for child to finish
+//             wait(NULL);
+//             close(fd[1]); // Close the write end of the pipe (child already used it)
+//             in_fd = fd[0]; // Save the read end of the pipe for the next command
+//             i++; // Move to the next command
+//         }
+//         else
+//         {
+//             // Handle fork error
+//             perror("Fork failed");
+//             exit(1);
+//         }
+//     }
+// }
+void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
+{
+    int i = 0, fd[2], in_fd = 0;
+
+    while (commands[i] != NULL)
+    {
+        // Create a pipe for the current command
+        if (commands[i + 1] != NULL) {
+            if (pipe(fd) == -1) {
+                perror("Pipe failed");
+                exit(1);
+            }
+        }
+
+        // Redirect input from previous command (if any)
+        if (in_fd != 0) {
+            if (dup2(in_fd, STDIN_FILENO) == -1) {
+                perror("dup2 failed for stdin");
+                exit(1);
+            }
+            close(in_fd);
+        }
+
+        // If there's a next command, redirect output to the pipe
+        if (commands[i + 1] != NULL) {
+            if (dup2(fd[1], STDOUT_FILENO) == -1) {
+                perror("dup2 failed for stdout");
+                exit(1);
+            }
+            close(fd[1]);
+        }
+
+        // Execute the command in the current process (this handles `hop`, `reveal`, etc.)
+        execute_single_command(commands[i], q, flag, home_dir, prev_dir);
+
+        // After execution, restore standard output and input
+        if (commands[i + 1] != NULL) {
+            close(fd[1]); // Close write end of the pipe
+            in_fd = fd[0]; // Save read end of the pipe for the next command
+        }
+
+        // Move to the next command
+        i++;
+    }
+}
+
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
+    char *split_into_pipes[256];
+    char *command;
+    char save_original_command[256];
+    int pipe_count = 0;
+    
+    // Copy the original command to preserve it
+    strcpy(save_original_command, s);
+    
+    // Tokenize the string into separate commands based on the pipe symbol "|"
+    command = strtok(save_original_command, "|");
+    while (command != NULL)
+    {
+        // Store each command in the array
+        split_into_pipes[pipe_count] = command;
+        pipe_count++;
+        
+        // Continue tokenizing to the next command
+        command = strtok(NULL, "|");  // This should be NULL to continue parsing the original string
+    }
+    split_into_pipes[pipe_count] = NULL; // Mark the end of the command array
+    
+    // Execute the commands using the piped execution function
+    execute_piped_commands(split_into_pipes, q, flag, home_dir, prev_dir);
+}
+
+
+void write_queue_to_file(queue *q, const char *filename, const char *home_dir)
+{
+    char file_path[256];
+    snprintf(file_path, 256, "%s/%s", home_dir, filename);
+
+    FILE *file = fopen(file_path, "w");
+    if (file == NULL)
+    {
+        perror("Could not open file for writing");
+        return;
+    }
+
+    for (int i = 0; i < q->size; i++)
+    {
+        int index = (q->front + i) % 15;
+        fprintf(file, "%s\n", q->log[index]);
+    }
+
+    fclose(file);
+}
+
+void read_queue_from_file(queue *q, const char *filename, const char *home_dir)
+{
+    char file_path[256];
+    snprintf(file_path, 256, "%s/%s", home_dir, filename);
+
+    FILE *file = fopen(file_path, "r");
+    if (file == NULL)
+    {
+        perror("Could not open file for reading");
+        return;
+    }
+
+    char buffer[256];
+    while (fgets(buffer, 256, file))
+    {
+        buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
+        enqueue(q, buffer);
+    }
+
+    fclose(file);
+}
+
+void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
+{
+
     char delimiters[] = " \t";
-    char *y = (char *)malloc(sizeof(char));
+    char y[256];
     strcpy(y, s);
     // printf("%s\n",s);
 
     char *token = strtok(s, delimiters);
-    
+
     while (token != NULL)
-    { 
+    {
         // printf("Token: %s\n", token);
         // printf("%s\n", y);
 
-        // Check if the first token is "EXIT"
+        // Check if the first token is "EXIT"3
         if (strcmp(token, "EXIT") == 0)
         {
 
@@ -121,7 +368,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                     token = strtok(NULL, delimiters);
                     if (token == NULL)
                     {
-                        printf("wrong input error\n");
+                        printf("wrong input error \n");
                     }
                     else
                     {
@@ -142,14 +389,20 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                         }
                         else
                         {
-                            printf("Conversion failed.\n");
+                            printf("Conversion failed. \n");
                         }
+                        // need to think over here if there is invaid command in log execute  then need to handle it
+                        // token = strtok(NULL, delimiters);
+                        // if (token != NULL)
+                        // {
+                        //     printf("Invalid command\n");
+                        // }
                     }
                 }
                 else
                 {
 
-                    printf("wrong input erorr\n");
+                    printf("wrong input erorr \n");
                 }
             }
         }
@@ -160,8 +413,8 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
             arr[1] = 0;
             arr[2] = 0;
             token = strtok(NULL, delimiters);
-            char *path = (char *)malloc(sizeof(char) * 1024);
-            char *seek_name = (char *)malloc(sizeof(char) * 1024);
+            char *path;
+            char *seek_name;
             path = "";
             seek_name = "";
             int flag = 0;
@@ -210,7 +463,7 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
             }
             if (arr[0] == 1 && arr[1] == 1)
             {
-                printf("Invalid flags\n");
+                printf("Invalid flags \n");
             }
             else
             {
@@ -219,6 +472,51 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
                 seek(resolved_path_seek, seek_name, arr[0], arr[1], arr[2]);
 
                 free(resolved_path_seek);
+            }
+        }
+        else if (strcmp(token, "activites") == 0)
+        {
+        }
+        else if (strcmp(token, "bg") == 0)
+        {
+            token = strtok(NULL, delimiters);
+            if (token == NULL)
+            {
+                printf("wrong input error\n");
+            }
+            else
+            {
+                int value;
+                // it is used to convert a token ie char * to int
+                if (sscanf(token, "%d", &value) == 1)
+                {
+                    // printf("The integer value is: %d\n", value);
+                }
+                else
+                {
+                    printf("Conversion failed.\n");
+                }
+            }
+        }
+        else if (strcmp(token, "fg") == 0)
+        {
+            token = strtok(NULL, delimiters);
+            if (token == NULL)
+            {
+                printf("wrong input error\n");
+            }
+            else
+            {
+                int value;
+                // it is used to convert a token ie char * to int
+                if (sscanf(token, "%d", &value) == 1)
+                {
+                    // printf("The integer value is: %d\n", value);
+                }
+                else
+                {
+                    printf("Conversion failed.\n");
+                }
             }
         }
         else
@@ -271,47 +569,4 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
         // Get the next token
         token = strtok(NULL, delimiters);
     }
-}
-
-void write_queue_to_file(queue *q, const char *filename, const char *home_dir)
-{
-    char file_path[256];
-    snprintf(file_path, 256, "%s/%s", home_dir, filename);
-
-    FILE *file = fopen(file_path, "w");
-    if (file == NULL)
-    {
-        perror("Could not open file for writing");
-        return;
-    }
-
-    for (int i = 0; i < q->size; i++)
-    {
-        int index = (q->front + i) % 15;
-        fprintf(file, "%s\n", q->log[index]);
-    }
-
-    fclose(file);
-}
-
-void read_queue_from_file(queue *q, const char *filename, const char *home_dir)
-{
-    char file_path[256];
-    snprintf(file_path, 256, "%s/%s", home_dir, filename);
-
-    FILE *file = fopen(file_path, "r");
-    if (file == NULL)
-    {
-        perror("Could not open file for reading");
-        return;
-    }
-
-    char buffer[256];
-    while (fgets(buffer, 256, file))
-    {
-        buffer[strcspn(buffer, "\n")] = '\0'; // Remove newline character
-        enqueue(q, buffer);
-    }
-
-    fclose(file);
 }

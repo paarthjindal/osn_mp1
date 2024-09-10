@@ -4,6 +4,7 @@
 #define y 256
 #define z 256
 
+
 #define RESET_COLOR "\033[0m"
 #define USER_COLOR "\033[34m" // Blue
 #define HOST_COLOR "\033[32m" // Green
@@ -20,6 +21,7 @@ void prompt(char *home_dir)
         perror("getcwd() error");
         return;
     }
+    // printf("mine current is%s\n",cwd);
 
     // Check if the current directory is inside the home directory
     if (strncmp(cwd, home_dir, strlen(home_dir)) == 0)

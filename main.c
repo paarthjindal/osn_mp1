@@ -1,14 +1,20 @@
+#define _XOPEN_SOURCE 700
+
 #include "display_requirement.h"
 #include "proclore.h"
 #include "input_requirement.h"
 #include "log_commands.h"
-
+#include "pipes.h"
+#include "i_o_redirection.h"
+#include "redirection_along_with_pipes.h"
 #include <sys/types.h>
 #include <string.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+#include <fcntl.h>
 
 typedef struct back_proc_list
 {
@@ -53,6 +59,8 @@ void sigchld_handler(int sig)
     }
 }
 
+
+
 int main()
 {
     // Set up the SIGCHLD signal handler
@@ -89,6 +97,7 @@ int main()
     while (flag)
     {
         // Update and display the prompt
+    
         prompt(save_dir);
 
         // Read user input and store in input
@@ -117,7 +126,7 @@ int main()
         write_queue_to_file(q, filename, save_dir);
 
         char *temp = strtok(input, ";");
-        char arr[256][256];
+        char arr[256][1024];
         int command_count = 0; // Track the number of commands
         int background[256] = {0};
 
@@ -164,8 +173,7 @@ int main()
             {
                 if (current_part[i] == '&')
                 {
-                    // Allocate memory and store the part before '&'
-                     // Allocate memory for the substring
+
                     // if (arr[command_count] != NULL)
                     {
                         strncpy(arr[command_count], current_part, i); // Copy the substring from current_part
@@ -181,7 +189,7 @@ int main()
                     // while (*current_part == ' ' || *current_part == '\t')
                     //     current_part++;
                     len = strlen(current_part);
-                    // i = 0; 
+                    // i = 0;
                 }
                 else
                 {
@@ -192,7 +200,6 @@ int main()
             // If there's still a part left after the last '&', add it as a foreground command
             if (*current_part != '\0')
             {
-                
                 // if (arr[command_count] != NULL)
                 {
                     strcpy(arr[command_count], current_part);
@@ -200,7 +207,6 @@ int main()
                     command_count++;
                 }
             }
-
             // Move to the next tokenized command by ';'
             temp = strtok(NULL, ";");
         }
@@ -247,7 +253,28 @@ int main()
             }
             else
             {
-                execute_terminal(arr[i], q, &flag, home_dir, prev_dir);
+                // execute_terminal(arr[i], q, &flag, home_dir, prev_dir);
+                // Measure execution time for foreground commands
+                struct timespec start_time, end_time;
+                clock_gettime(CLOCK_MONOTONIC, &start_time); // Record the start time
+
+                execute_terminal(arr[i], q, &flag, home_dir, prev_dir); 
+                // handle_io_redirection_and_piping(arr[i],0,q,&flag,home_dir,prev_dir);
+
+                clock_gettime(CLOCK_MONOTONIC, &end_time); // Record the end time
+
+                // Calculate the elapsed time
+                double elapsed_time = (end_time.tv_sec - start_time.tv_sec) +
+                                      (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+
+                // Print the time if the command took more than 2 second  i assumed that i need to print after 2 seconds
+                if (elapsed_time >= 2.0)
+                {
+                    // Round down the elapsed time to the nearest integer
+                    int rounded_time = (int)elapsed_time;
+                    printf("Foreground command '%s' took %d seconds to complete.\n", arr[i], rounded_time);
+                    printf("<%s@SYS:%s %s : %ds>\n", getenv("USER"), home_dir, arr[i], rounded_time);
+                }
             }
         }
     }

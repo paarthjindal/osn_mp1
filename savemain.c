@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 700
+
 #include "display_requirement.h"
 #include "proclore.h"
 #include "input_requirement.h"
@@ -9,6 +11,18 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+
+typedef struct back_proc_list
+{
+    char process_name[256];
+    pid_t process_id;
+
+} back_proc_list;
+
+// Assuming maximum number of background processes is 256
+back_proc_list background_process_list[256];
+int process_count = 0; // Track the number of background processes
 
 // Signal handler for SIGCHLD
 void sigchld_handler(int sig)
@@ -19,13 +33,25 @@ void sigchld_handler(int sig)
     // Loop to handle all terminated child processes
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
     {
-        if (WIFEXITED(status))
+        // Find the process name using the PID
+        for (int i = 0; i < process_count; i++)
         {
-            printf("Process with PID %d ended normally with exit status %d\n", pid, WEXITSTATUS(status));
-        }
-        else if (WIFSIGNALED(status))
-        {
-            printf("Process with PID %d ended abnormally due to signal %d\n", pid, WTERMSIG(status));
+            if (background_process_list[i].process_id == pid)
+            {
+                if (WIFEXITED(status))
+                {
+                    printf("Process '%s' with PID %d ended normally with exit status %d\n",
+                           background_process_list[i].process_name, pid, WEXITSTATUS(status));
+                }
+                else if (WIFSIGNALED(status))
+                {
+                    printf("Process '%s' with PID %d ended abnormally due to signal %d\n",
+                           background_process_list[i].process_name, pid, WTERMSIG(status));
+                }
+                // Remove the process from the list (optional)
+                background_process_list[i] = background_process_list[--process_count]; // Replace with last element
+                break;
+            }
         }
     }
 }
@@ -33,7 +59,6 @@ void sigchld_handler(int sig)
 int main()
 {
     // Set up the SIGCHLD signal handler
-    // i have included signal.h library overe here but still it is showing me erorr in the following lines
     struct sigaction sa;
     sa.sa_handler = sigchld_handler;
     sa.sa_flags = SA_RESTART | SA_NOCLDSTOP; // Restart interrupted system calls and don't call handler when children stop
@@ -77,6 +102,10 @@ int main()
             exit(EXIT_FAILURE);
         }
         int size = strlen(input);
+        if (size == 0 || (size == 1 && input[0] == '\n'))
+        {
+            continue; // No input, just prompt again
+        }
         input[size - 1] = '\0';
 
         char save[256];
@@ -91,12 +120,35 @@ int main()
         write_queue_to_file(q, filename, save_dir);
 
         char *temp = strtok(input, ";");
-        char *arr[256];
-        int count = 0;
+        char arr[256][256];
+        int command_count = 0; // Track the number of commands
         int background[256] = {0};
+
+        // while (temp != NULL)
+        // {
+        //     while (*temp == ' ' || *temp == '\t')
+        //         temp++;
+        //     int len = strlen(temp);
+        //     while (len > 0 && (temp[len - 1] == ' ' || temp[len - 1] == '\t'))
+        //     {
+        //         temp[--len] = '\0';
+        //     }
+
+        //     if (len > 0 && temp[len - 1] == '&')
+        //     {
+        //         background[command_count] = 1;
+        //         temp[len - 1] = '\0';
+        //     }
+
+        //     arr[command_count] = temp;
+        //     command_count++;
+
+        //     temp = strtok(NULL, ";");
+        // }
 
         while (temp != NULL)
         {
+            // Trim leading and trailing whitespace
             while (*temp == ' ' || *temp == '\t')
                 temp++;
             int len = strlen(temp);
@@ -105,19 +157,57 @@ int main()
                 temp[--len] = '\0';
             }
 
-            if (len > 0 && temp[len - 1] == '&')
+            char *current_part = temp;
+            int i = 0;
+            // printf("stdghghj\n");
+            // printf("%s\n",current_part);
+
+            // Traverse the string to find '&'
+            while (i < len)
             {
-                background[count] = 1;
-                temp[len - 1] = '\0';
+                if (current_part[i] == '&')
+                {
+
+                    // if (arr[command_count] != NULL)
+                    {
+                        strncpy(arr[command_count], current_part, i); // Copy the substring from current_part
+                        arr[command_count][i] = '\0';                 // Null-terminate the string
+                        background[command_count] = 1;                // Mark as background
+                        command_count++;
+                    }
+
+                    // Move to the part after '&'
+                    current_part = temp + i + 1;
+                    // printf("%s\n",current_part);
+                    // Trim leading whitespace after '&'
+                    // while (*current_part == ' ' || *current_part == '\t')
+                    //     current_part++;
+                    len = strlen(current_part);
+                    // i = 0;
+                }
+                else
+                {
+                    i++;
+                }
             }
 
-            arr[count] = temp;
-            count++;
+            // If there's still a part left after the last '&', add it as a foreground command
+            if (*current_part != '\0')
+            {
 
+                // if (arr[command_count] != NULL)
+                {
+                    strcpy(arr[command_count], current_part);
+                    background[command_count] = 0; // Mark as foreground
+                    command_count++;
+                }
+            }
+
+            // Move to the next tokenized command by ';'
             temp = strtok(NULL, ";");
         }
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < command_count; i++)
         {
             if (background[i] == 1)
             {
@@ -149,12 +239,38 @@ int main()
                 else
                 {
                     // Parent process continues to the next command
-                    printf("%d\n", back_process);
+                    background_process_list[process_count].process_id = back_process;
+                    strncpy(background_process_list[process_count].process_name, arr[i], 255);
+                    background_process_list[process_count].process_name[255] = '\0'; // Ensure null-terminated string
+                    process_count++;
+
+                    printf("Background process started: PID %d\n", back_process);
                 }
             }
             else
             {
-                execute_terminal(arr[i], q, &flag, home_dir, prev_dir);
+                // execute_terminal(arr[i], q, &flag, home_dir, prev_dir);
+                // Measure execution time for foreground commands
+                struct timespec start_time, end_time;
+                clock_gettime(CLOCK_MONOTONIC, &start_time); // Record the start time
+
+                execute_terminal(arr[i], q, &flag, home_dir, prev_dir); // Execute the command
+
+                clock_gettime(CLOCK_MONOTONIC, &end_time); // Record the end time
+
+                // Calculate the elapsed time
+                double elapsed_time = (end_time.tv_sec - start_time.tv_sec) +
+                                      (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+
+                // Print the time if the command took more than 2 second  i assumed that i need to print after 2 seconds
+                if (elapsed_time >= 2.0)
+                {
+                    // Round down the elapsed time to the nearest integer
+                    int rounded_time = (int)elapsed_time;
+                    printf("Foreground command '%s' took %d seconds to complete.\n", arr[i], rounded_time);
+                     printf("<%s@SYS:%s %s : %ds>\n", getenv("USER"), home_dir, arr[i], rounded_time);
+
+                }
             }
         }
     }
