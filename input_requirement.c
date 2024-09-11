@@ -1,5 +1,6 @@
 #include "seek.h"
 #include "main.h"
+#include "neonate.h"
 // dont know for some reason there is infinte loop going on if i type yes in the command line
 
 int handle_redirection(char *cmd)
@@ -533,6 +534,38 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
             else
             {
                 printf("Usage: ping <pid> <signal_number>\n");
+            }
+        }
+        else if (strcmp(token, "neonate") == 0)
+        {
+            token = strtok(NULL, delimiters);
+            if (token == NULL)
+            {
+                printf("Usage: neonate -n [time_arg]\n");
+            }
+            else if (strcmp(token, "-n") == 0)
+            {
+                token = strtok(NULL, delimiters);
+                if (token != NULL)
+                {
+                    int time_arg = atoi(token);
+                    if (time_arg > 0)
+                    {
+                        neonate(time_arg);
+                    }
+                    else
+                    {
+                        printf("Invalid time argument.\n");
+                    }
+                }
+                else
+                {
+                    printf("Time argument missing.\n");
+                }
+            }
+            else
+            {
+                printf("Invalid command\n");
             }
         }
         else

@@ -145,3 +145,6 @@ i am not printing relative path instead printing full path as i find it better l
 
 Chat gpt ai link 
 https://chatgpt.com/c/97fa0cdb-2968-41bc-924e-22156c1bcb73
+
+
+https://chatgpt.com/c/66e0ae49-dea8-8007-baac-68b52fc355b1

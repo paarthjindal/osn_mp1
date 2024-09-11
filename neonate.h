@@ -1,14 +1,14 @@
 #ifndef NEONATE_H
 #define NEONATE_H
 
-
-#include <sys/types.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "main.h"
+#include <sys/stat.h>
+#include <pwd.h>
+#include <grp.h>
 #include <time.h>
-#include <fcntl.h>
+int get_most_recent_pid() ;
+int kbhit(void) ;
+void neonate(int interval) ;
+
 
 #endif

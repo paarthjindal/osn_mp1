@@ -1,15 +1,15 @@
-sleep 3
 activities
-proclore 1092705
-EXIT
+sleep 6
+activities
+fg 1147786
+ps
+sleep 5
+activities
+ps 1159522
 hop lesgo
 hop ..
 sleep 5
 activities
-EXIT
-sleep 5
+neonate -n 3
+neonate -n 2
 activities
-hop lesgo
-seek newfile
-reveal
-hop lesgo

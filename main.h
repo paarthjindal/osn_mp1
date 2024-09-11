@@ -17,12 +17,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <termios.h>
 #include <fcntl.h>
 #include "activites.h"
 #include "log_commands.h"
 #include "signals.h"
 #include <errno.h>
 #include "fg_and_bg.h"
+#include "neonate.h"
+
 typedef struct back_proc_list
 {
     char process_name[256];
