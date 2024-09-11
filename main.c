@@ -19,7 +19,6 @@ void sigchld_handler(int sig)
 {
     int status;
     pid_t pid;
-
     // Loop to handle all terminated child processes
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
     {
@@ -105,23 +104,58 @@ void ctrlz_handler(int sig)
     }
 }
 
-void ctrld_handler(int sig)
+void ctrld_handler()
 {
+    printf("Ctrl+D detected. Terminating all ongoing processes...\n");
+  
+    for (int i = 0; i < process_count; i++)
+    {
+        if (kill(background_process_list[i].process_id, SIGKILL) == -1)
+        {
+            perror("Failed to kill background process");
+        }
+    }
+    // Wait for all child processes to terminate
+    
+     // Now exit the terminal
+    printf("All processes killed. Exiting terminal.\n");
+    exit(0);
+    
 }
 
 void get_input(char *buffer, size_t size)
 {
-    int result;
-    do
+    while (1)
     {
         errno = 0; // Clear errno before the input call
-        result = fgets(buffer, size, stdin) == NULL;
-        if (result == -1 && errno == EINTR)
+        if (fgets(buffer, size, stdin) != NULL)
         {
-            // Interrupted by a signal, retry the input operation
-            printf("\nInput interrupted by signal, please retry.\n");
+            return; // Input was successfully read, return from the function
         }
-    } while (result == -1 && errno == EINTR); // Retry if interrupted by signal
+
+        // Check if the input was interrupted by a signal
+        if (errno == EINTR)
+        {
+            // Interrupted by a signal, inform the user and retry the input
+            printf("\nInput interrupted by a signal, please retry: ");
+            fflush(stdout); // Flush the output buffer to ensure prompt display
+            continue;       // Retry the input
+        }
+        else
+        {
+            // Handle end of file (Ctrl+D)
+            if (feof(stdin))
+            {
+                ctrld_handler(); // Call your custom handler for Ctrl+D
+                return;          // Return after handling Ctrl+D (this may exit the program as per your design)
+            }
+            else
+            {
+                perror("Error reading input");
+                exit(EXIT_FAILURE); // Exit the program in case of any other error
+            }
+        }
+    }
 }
 int main()
 {
@@ -299,7 +333,7 @@ int main()
                     background_process_list[process_count].process_id = back_process;
                     strncpy(background_process_list[process_count].process_name, arr[i], 255);
                     background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
-                    process_count++; // Safely increment process_count
+                    process_count++;                                                 // Safely increment process_count
 
                     // Unblock SIGCHLD after updating process list
                     sigprocmask(SIG_SETMASK, &old_mask, NULL);
