@@ -2,7 +2,6 @@
 #include "main.h"
 // dont know for some reason there is infinte loop going on if i type yes in the command line
 
-
 int handle_redirection(char *cmd)
 {
     char *infile = NULL, *outfile = NULL;
@@ -85,13 +84,16 @@ void execute_single_command(char *command, queue *q, int *flag, char *home_dir, 
     restore_io(saved_stdin, saved_stdout);
 }
 
-
 void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
-    int i = 0, fd[2], in_fd = 0;
-
+    int i = 0, in_fd = 0;
+    int fd[2];
+    int save_out, save_in;
+    save_in = dup(STDIN_FILENO);
+    save_out = dup(STDOUT_FILENO);
     while (commands[i] != NULL)
     {
+
         // Create a pipe for the current command
         if (commands[i + 1] != NULL)
         {
@@ -105,6 +107,7 @@ void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir
         // Redirect input from previous command (if any)
         if (in_fd != 0)
         {
+            // open(in_fd,O_APPEND);
             if (dup2(in_fd, STDIN_FILENO) == -1)
             {
                 perror("dup2 failed for stdin");
@@ -113,30 +116,61 @@ void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir
             close(in_fd);
         }
 
+        // printf("ytftyf%s\n", commands[i + 1]);
+        fflush(stdout);
         // If there's a next command, redirect output to the pipe
         if (commands[i + 1] != NULL)
         {
+            // printf("dark");
+            // fflush(stdout);
             if (dup2(fd[1], STDOUT_FILENO) == -1)
             {
+                // printf("white");
+                // fflush(stdout);
                 perror("dup2 failed for stdout");
                 exit(1);
             }
+            // printf("whtfite");
+            // fflush(stdout);
             close(fd[1]);
+            // printf("1234white");
+            // fflush(stdout);
         }
 
+        // printf("2345678%s\n", commands[i]);
+        // fflush(stdout);
         // Execute the command in the current process (this handles `hop`, `reveal`, etc.)
         execute_single_command(commands[i], q, flag, home_dir, prev_dir);
+        if (in_fd != 0)
+        {
+            dup2(save_in, STDIN_FILENO);
+            close(save_in);
+        }
 
+        // Restore stdout for the shell (after the last command)
+        if (commands[i + 1] == NULL)
+        {
+            if (dup2(save_out, STDOUT_FILENO) == -1)
+            {
+                perror("dup2 failed for stdout restore");
+                exit(1);
+            }
+        }
         // After execution, restore standard output and input
         if (commands[i + 1] != NULL)
         {
             close(fd[1]);  // Close write end of the pipe
             in_fd = fd[0]; // Save read end of the pipe for the next command
         }
+        // Restore stdin and stdout after executing all commands
 
         // Move to the next command
         i++;
     }
+    dup2(save_in, STDIN_FILENO);
+    close(save_in);
+    dup2(save_out, STDOUT_FILENO);
+    close(save_out);
 }
 
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
@@ -156,13 +190,14 @@ void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_d
         // Store each command in the array
         split_into_pipes[pipe_count] = command;
         pipe_count++;
-
+        // printf("%s\n", command);
         // Continue tokenizing to the next command
         command = strtok(NULL, "|"); // This should be NULL to continue parsing the original string
     }
     split_into_pipes[pipe_count] = NULL; // Mark the end of the command array
 
     // Execute the commands using the piped execution function
+
     execute_piped_commands(split_into_pipes, q, flag, home_dir, prev_dir);
 }
 
@@ -229,8 +264,11 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
         {
 
             *flag = 0;
-            exit(1);
+            fflush(stdout);
             printf("thanks for using mine terminal , hope you had a pleasant experience\n");
+
+            exit(1);
+
             break;
         }
         else if (strcmp(token, "hop") == 0)
@@ -452,6 +490,7 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
                 // it is used to convert a token ie char * to int
                 if (sscanf(token, "%d", &value) == 1)
                 {
+                    bg_command(value);
                     // printf("The integer value is: %d\n", value);
                 }
                 else
@@ -473,6 +512,8 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
                 // it is used to convert a token ie char * to int
                 if (sscanf(token, "%d", &value) == 1)
                 {
+                    fg_command(value);
+
                     // printf("The integer value is: %d\n", value);
                 }
                 else
@@ -499,10 +540,10 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
             // printf("wrong input\n");
             // now over here i need to implement mine sixth functionality
             pid_t pid = fork();
-            foreground_process_pid.process_id=pid;
+            foreground_process_pid.process_id = pid;
             // foreground_process_pid.process_name=arr;
             strncpy(foreground_process_pid.process_name, y, 255);
-                    foreground_process_pid.process_name[255] = '\0'; // Null-terminate string
+            foreground_process_pid.process_name[255] = '\0'; // Null-terminate string
             if (pid < 0)
             {
                 perror("fork");

@@ -22,12 +22,11 @@
 #include "log_commands.h"
 #include "signals.h"
 #include <errno.h>
-
+#include "fg_and_bg.h"
 typedef struct back_proc_list
 {
     char process_name[256];
     pid_t process_id;
-    int is_running; // 1 for Running, 0 for Stopped according to convention 
 } back_proc_list;
 
 typedef struct fore_proc_list

@@ -28,6 +28,7 @@ void sigchld_handler(int sig)
         {
             if (background_process_list[i].process_id == pid)
             {
+                // Print termination message
                 if (WIFEXITED(status))
                 {
                     printf("Process '%s' with PID %d ended normally with exit status %d\n",
@@ -39,15 +40,22 @@ void sigchld_handler(int sig)
                            background_process_list[i].process_name, pid, WTERMSIG(status));
                 }
 
-                // Mark the process as Stopped
-                background_process_list[i].is_running = 0;
+                // Remove the process from the background process list
+                for (int j = i; j < process_count - 1; j++)
+                {
+                    background_process_list[j] = background_process_list[j + 1];
+                }
+                process_count--; // Reduce the count of background processes
+
                 break;
             }
         }
     }
 }
+
 fore_process_list foreground_process_pid;
-void initialize_foreground_process_pid() {
+void initialize_foreground_process_pid()
+{
     foreground_process_pid.process_id = -1;
 }
 // foreground_process_pid.process_id=-1;
@@ -67,7 +75,7 @@ void ctrlc_handler(int sig)
     {
         // No foreground process, just print a new line and display prompt
         printf("\n");
-        fflush(stdout);          // Ensure prompt is printed immediately
+        fflush(stdout); // Ensure prompt is printed immediately
     }
 }
 
@@ -76,15 +84,18 @@ void ctrlz_handler(int sig)
 {
     if (foreground_process_pid.process_id != -1)
     {
-        kill(foreground_process_pid.process_id, SIGTSTP);
+        if (kill(foreground_process_pid.process_id, SIGTSTP) == -1)
+        {
+            perror("Failed to send SIGTSTP");
+            return;
+        }
 
         background_process_list[process_count].process_id = foreground_process_pid.process_id;
-                    strncpy(background_process_list[process_count].process_name, foreground_process_pid.process_name, 255);
-                    background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
-                    background_process_list[process_count].is_running = 0;
+        strncpy(background_process_list[process_count].process_name, foreground_process_pid.process_name, 255);
+        background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
 
-                    process_count++;
-        
+        process_count++;
+
         printf("\nForeground process stopped\n");
     }
     else
@@ -157,7 +168,7 @@ int main()
         // Read user input and store in input
         char input[256];
         // if (fgets(input, sizeof(input), stdin) == NULL)
-        // {
+        // {nano
         //     perror("error in taking input from the user");
         //     exit(EXIT_FAILURE);
         // }
@@ -288,8 +299,6 @@ int main()
                     background_process_list[process_count].process_id = back_process;
                     strncpy(background_process_list[process_count].process_name, arr[i], 255);
                     background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
-                    background_process_list[process_count].is_running = 1;
-
                     process_count++; // Safely increment process_count
 
                     // Unblock SIGCHLD after updating process list
