@@ -1,15 +1,15 @@
-iMan sleep
-acctivitie
-iMan sleep
-i
-hop lesgo
-hop ~
-iMan sleep
-i
-iMan sleep
-echo left with piping >piping.txt
-echo < piping.txt >paarth.txt
-echo hello | wc
-hop lesgo
-hop ~
-hop lesgo | wc
+!
+|
+cat newfile.txt | wc | 
+cat newfile.txt|wc|     
+cat newfile.txt|wc
+|
+cat newfile.txt |wc|
+sleep 5
+actvities
+activities
+ps 1401639
+proclore 1401639
+echo hi , echo no >>mehul.txt ; cat mehul.txt |wc
+echo hi ; echo mistake > mehul.txt ; cat mehul.txt | wc
+echo "got it" >>mehul.txt &

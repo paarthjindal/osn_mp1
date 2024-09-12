@@ -84,95 +84,6 @@ void execute_single_command(char *command, queue *q, int *flag, char *home_dir, 
     restore_io(saved_stdin, saved_stdout);
 }
 
-// void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
-// {
-//     int i = 0, in_fd = 0;
-//     int fd[2];
-//     int save_out, save_in;
-//     save_in = dup(STDIN_FILENO);
-//     save_out = dup(STDOUT_FILENO);
-//     while (commands[i] != NULL)
-//     {
-
-//         // Create a pipe for the current command
-//         if (commands[i + 1] != NULL)
-//         {
-//             if (pipe(fd) == -1)
-//             {
-//                 perror("Pipe failed");
-//                 exit(1);
-//             }
-//         }
-
-//         // Redirect input from previous command (if any)
-//         if (in_fd != 0)
-//         {
-//             // open(in_fd,O_APPEND);
-//             if (dup2(in_fd, STDIN_FILENO) == -1)
-//             {
-//                 perror("dup2 failed for stdin");
-//                 exit(1);
-//             }
-//             close(in_fd);
-//         }
-
-//         // printf("ytftyf%s\n", commands[i + 1]);
-//         fflush(stdout);
-//         // If there's a next command, redirect output to the pipe
-//         if (commands[i + 1] != NULL)
-//         {
-//             // printf("dark");
-//             // fflush(stdout);
-//             if (dup2(fd[1], STDOUT_FILENO) == -1)
-//             {
-//                 // printf("white");
-//                 // fflush(stdout);
-//                 perror("dup2 failed for stdout");
-//                 exit(1);
-//             }
-//             // printf("whtfite");
-//             // fflush(stdout);
-//             close(fd[1]);
-//             // printf("1234white");
-//             // fflush(stdout);
-//         }
-
-//         // printf("2345678%s\n", commands[i]);
-//         // fflush(stdout);
-//         // Execute the command in the current process (this handles `hop`, `reveal`, etc.)
-//         execute_single_command(commands[i], q, flag, home_dir, prev_dir);
-//         if (in_fd != 0)
-//         {
-//             dup2(save_in, STDIN_FILENO);
-//             close(save_in);
-//         }
-
-//         // Restore stdout for the shell (after the last command)
-//         if (commands[i + 1] == NULL)
-//         {
-//             if (dup2(save_out, STDOUT_FILENO) == -1)
-//             {
-//                 perror("dup2 failed for stdout restore");
-//                 exit(1);
-//             }
-//         }
-//         // After execution, restore standard output and input
-//         if (commands[i + 1] != NULL)
-//         {
-//             close(fd[1]);  // Close write end of the pipe
-//             in_fd = fd[0]; // Save read end of the pipe for the next command
-//         }
-//         // Restore stdin and stdout after executing all commands
-
-//         // Move to the next command
-//         i++;
-//     }
-//     dup2(save_in, STDIN_FILENO);
-//     close(save_in);
-//     dup2(save_out, STDOUT_FILENO);
-//     close(save_out);
-// }
-
 void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
     int i = 0, in_fd = 0, fd[2];
@@ -268,14 +179,26 @@ void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir
 
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
+
+    while (*s == ' ')
+        s++; // Trim leading spaces
+    int len = strlen(s);
+    while (len > 0 && s[len - 1] == ' ')
+        s[--len] = '\0';
     // Check if the command contains the pipe symbol "|"
     if (strchr(s, '|') == NULL)
     {
         // If there's no pipe, execute the command directly
-        execute_final_terminal(s, q, flag, home_dir, prev_dir);
+        execute_single_command(s, q, flag, home_dir, prev_dir);
     }
     else
     {
+        // Error check: command should not start or end with a pipe
+        if (s[0] == '|' || s[len - 1] == '|')
+        {
+            printf("Invalid use of pipe\n");
+            return; // Exit due to invalid pipe usage
+        }
         // If a pipe is found, tokenize and process the piped commands
         char *split_into_pipes[256];
         char *command;

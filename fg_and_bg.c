@@ -55,12 +55,14 @@ void fg_command(pid_t pid)
     // }
     while (waitpid(pid, &status, WUNTRACED) == -1 && errno == EINTR)
     {
+        // i am executing  this to wait for foregorund process to complete
+        // i can also use if(waidpid()) instead of whliee
     }
 
     // Restore terminal control to the shell
     if (tcsetpgrp(STDIN_FILENO, getpgid(getpid())) == -1)
     {
-        perror("Failed to restore terminal control to the shell");
+        perror("Failed to restore terminal control back\n");
         return;
     }
 }

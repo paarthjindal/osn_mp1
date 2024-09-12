@@ -29,7 +29,7 @@ void handle_ping(char *pid_str, char *signal_num_str) {
         }
     }
 
-    if (!found) {
+    if (found==0) {
         printf("No such process found\n");
     }
 }

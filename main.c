@@ -57,7 +57,6 @@ void initialize_foreground_process_pid()
 {
     foreground_process_pid.process_id = -1;
 }
-// foreground_process_pid.process_id=-1;
 
 void ctrlc_handler(int sig)
 {
@@ -70,9 +69,9 @@ void ctrlc_handler(int sig)
     }
     else
     {
-        // No foreground process, just print a new line and display prompt
+        // perhaps i need to change something over here
         printf("\n");
-        fflush(stdout); // Ensure prompt is printed immediately
+        fflush(stdout);
     }
 }
 
@@ -105,7 +104,7 @@ void ctrlz_handler(int sig)
 void ctrld_handler()
 {
     printf("Ctrl+D detected. Terminating all ongoing processes...\n");
-  
+
     for (int i = 0; i < process_count; i++)
     {
         if (kill(background_process_list[i].process_id, SIGKILL) == -1)
@@ -114,11 +113,10 @@ void ctrld_handler()
         }
     }
     // Wait for all child processes to terminate
-    
-     // Now exit the terminal
+
+    // Now exit the terminal
     printf("All processes killed. Exiting terminal.\n");
     exit(0);
-    
 }
 
 void get_input(char *buffer, size_t size)
@@ -156,8 +154,14 @@ void get_input(char *buffer, size_t size)
         }
     }
 }
+const char *PURPLE_FG = "\x1b[35m";   // Purple Foreground
+const char *DARK_RED_BG = "\x1b[41m"; // Dark Red Background
+const char *RESET = "\x1b[0m";        // Reset to default colors
+
 int main()
 {
+    printf("%s%sWelcome to C shell Made by paarth%s\n\n", DARK_RED_BG, PURPLE_FG, RESET);
+
     initialize_foreground_process_pid();
 
     // Set up the SIGCHLD signal handler
