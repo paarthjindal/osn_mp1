@@ -1,9 +1,3 @@
-i
-iMan sleep
-iMan cd
-echo < mehul.txt >paarth.txt
-cat mehul.txt
-[B[B
 iMan sleep
 acctivitie
 iMan sleep
@@ -13,3 +7,9 @@ hop ~
 iMan sleep
 i
 iMan sleep
+echo left with piping >piping.txt
+echo < piping.txt >paarth.txt
+echo hello | wc
+hop lesgo
+hop ~
+hop lesgo | wc

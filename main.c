@@ -59,8 +59,6 @@ void initialize_foreground_process_pid()
 }
 // foreground_process_pid.process_id=-1;
 
-// Signal handler for SIGINT
-// Signal handler for SIGINT (Ctrl+C)
 void ctrlc_handler(int sig)
 {
     if (foreground_process_pid.process_id != -1)
@@ -202,11 +200,6 @@ int main()
         signal(SIGTSTP, ctrlz_handler); // Handle Ctrl+Z
         // Read user input and store in input
         char input[256];
-        // if (fgets(input, sizeof(input), stdin) == NULL)
-        // {nano
-        //     perror("error in taking input from the user");
-        //     exit(EXIT_FAILURE);
-        // }
         fflush(stdout);
         get_input(input, 256);
         int size = strlen(input);
@@ -264,10 +257,7 @@ int main()
 
                     // Move to the part after '&'
                     current_part = temp + i + 1;
-                    // printf("%s\n",current_part);
-                    // Trim leading whitespace after '&'
-                    // while (*current_part == ' ' || *current_part == '\t')
-                    //     current_part++;
+
                     len = strlen(current_part);
                     // i = 0;
                 }

@@ -55,7 +55,6 @@ int handle_redirection(char *cmd)
         dup2(fd, STDOUT_FILENO);
         close(fd);
     }
-
     return 0;
 }
 
@@ -85,17 +84,108 @@ void execute_single_command(char *command, queue *q, int *flag, char *home_dir, 
     restore_io(saved_stdin, saved_stdout);
 }
 
+// void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
+// {
+//     int i = 0, in_fd = 0;
+//     int fd[2];
+//     int save_out, save_in;
+//     save_in = dup(STDIN_FILENO);
+//     save_out = dup(STDOUT_FILENO);
+//     while (commands[i] != NULL)
+//     {
+
+//         // Create a pipe for the current command
+//         if (commands[i + 1] != NULL)
+//         {
+//             if (pipe(fd) == -1)
+//             {
+//                 perror("Pipe failed");
+//                 exit(1);
+//             }
+//         }
+
+//         // Redirect input from previous command (if any)
+//         if (in_fd != 0)
+//         {
+//             // open(in_fd,O_APPEND);
+//             if (dup2(in_fd, STDIN_FILENO) == -1)
+//             {
+//                 perror("dup2 failed for stdin");
+//                 exit(1);
+//             }
+//             close(in_fd);
+//         }
+
+//         // printf("ytftyf%s\n", commands[i + 1]);
+//         fflush(stdout);
+//         // If there's a next command, redirect output to the pipe
+//         if (commands[i + 1] != NULL)
+//         {
+//             // printf("dark");
+//             // fflush(stdout);
+//             if (dup2(fd[1], STDOUT_FILENO) == -1)
+//             {
+//                 // printf("white");
+//                 // fflush(stdout);
+//                 perror("dup2 failed for stdout");
+//                 exit(1);
+//             }
+//             // printf("whtfite");
+//             // fflush(stdout);
+//             close(fd[1]);
+//             // printf("1234white");
+//             // fflush(stdout);
+//         }
+
+//         // printf("2345678%s\n", commands[i]);
+//         // fflush(stdout);
+//         // Execute the command in the current process (this handles `hop`, `reveal`, etc.)
+//         execute_single_command(commands[i], q, flag, home_dir, prev_dir);
+//         if (in_fd != 0)
+//         {
+//             dup2(save_in, STDIN_FILENO);
+//             close(save_in);
+//         }
+
+//         // Restore stdout for the shell (after the last command)
+//         if (commands[i + 1] == NULL)
+//         {
+//             if (dup2(save_out, STDOUT_FILENO) == -1)
+//             {
+//                 perror("dup2 failed for stdout restore");
+//                 exit(1);
+//             }
+//         }
+//         // After execution, restore standard output and input
+//         if (commands[i + 1] != NULL)
+//         {
+//             close(fd[1]);  // Close write end of the pipe
+//             in_fd = fd[0]; // Save read end of the pipe for the next command
+//         }
+//         // Restore stdin and stdout after executing all commands
+
+//         // Move to the next command
+//         i++;
+//     }
+//     dup2(save_in, STDIN_FILENO);
+//     close(save_in);
+//     dup2(save_out, STDOUT_FILENO);
+//     close(save_out);
+// }
+
 void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
-    int i = 0, in_fd = 0;
-    int fd[2];
-    int save_out, save_in;
+    int i = 0, in_fd = 0, fd[2];
+    pid_t pid;
+    int save_in, save_out;
+
+    // Save the original stdin and stdout
     save_in = dup(STDIN_FILENO);
     save_out = dup(STDOUT_FILENO);
+
     while (commands[i] != NULL)
     {
-
-        // Create a pipe for the current command
+        // Create a pipe for the next command
         if (commands[i + 1] != NULL)
         {
             if (pipe(fd) == -1)
@@ -105,103 +195,113 @@ void execute_piped_commands(char **commands, queue *q, int *flag, char *home_dir
             }
         }
 
-        // Redirect input from previous command (if any)
-        if (in_fd != 0)
+        // Fork a new process to execute the command
+        pid = fork();
+        if (pid < 0)
         {
-            // open(in_fd,O_APPEND);
-            if (dup2(in_fd, STDIN_FILENO) == -1)
-            {
-                perror("dup2 failed for stdin");
-                exit(1);
-            }
-            close(in_fd);
+            perror("Fork failed");
+            exit(1);
         }
 
-        // printf("ytftyf%s\n", commands[i + 1]);
-        fflush(stdout);
-        // If there's a next command, redirect output to the pipe
-        if (commands[i + 1] != NULL)
+        if (pid == 0) // Child process
         {
-            // printf("dark");
-            // fflush(stdout);
-            if (dup2(fd[1], STDOUT_FILENO) == -1)
+            // Redirect input from the previous command (if any)
+            if (in_fd != 0)
             {
-                // printf("white");
-                // fflush(stdout);
-                perror("dup2 failed for stdout");
-                exit(1);
+                if (dup2(in_fd, STDIN_FILENO) == -1)
+                {
+                    perror("dup2 failed for stdin");
+                    exit(1);
+                }
+                close(in_fd);
             }
-            // printf("whtfite");
-            // fflush(stdout);
+
+            // If there's a next command, redirect output to the pipe
+            if (commands[i + 1] != NULL)
+            {
+                if (dup2(fd[1], STDOUT_FILENO) == -1)
+                {
+                    perror("dup2 failed for stdout");
+                    exit(1);
+                }
+                close(fd[1]);
+            }
+
+            // Close read end of the pipe in the child process
+            close(fd[0]);
+
+            // Execute the command (replace this with your command execution function)
+            execute_single_command(commands[i], q, flag, home_dir, prev_dir);
+
+            // Exit the child process
+            exit(0);
+        }
+        else // Parent process
+        {
+            // Wait for the child to finish if it's the last command
+            if (commands[i + 1] == NULL)
+            {
+                wait(NULL);
+            }
+
+            // Close write end of the pipe
             close(fd[1]);
-            // printf("1234white");
-            // fflush(stdout);
-        }
 
-        // printf("2345678%s\n", commands[i]);
-        // fflush(stdout);
-        // Execute the command in the current process (this handles `hop`, `reveal`, etc.)
-        execute_single_command(commands[i], q, flag, home_dir, prev_dir);
-        if (in_fd != 0)
-        {
-            dup2(save_in, STDIN_FILENO);
-            close(save_in);
-        }
+            // Set the input for the next command to the read end of the pipe
+            in_fd = fd[0];
 
-        // Restore stdout for the shell (after the last command)
-        if (commands[i + 1] == NULL)
-        {
-            if (dup2(save_out, STDOUT_FILENO) == -1)
-            {
-                perror("dup2 failed for stdout restore");
-                exit(1);
-            }
+            // Parent continues to the next command
+            i++;
         }
-        // After execution, restore standard output and input
-        if (commands[i + 1] != NULL)
-        {
-            close(fd[1]);  // Close write end of the pipe
-            in_fd = fd[0]; // Save read end of the pipe for the next command
-        }
-        // Restore stdin and stdout after executing all commands
-
-        // Move to the next command
-        i++;
     }
+
+    // Restore stdin and stdout
     dup2(save_in, STDIN_FILENO);
     close(save_in);
     dup2(save_out, STDOUT_FILENO);
     close(save_out);
+
+    // Wait for all child processes to finish
+    while (wait(NULL) > 0)
+        ;
 }
 
 void execute_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
-    char *split_into_pipes[256];
-    char *command;
-    char save_original_command[256];
-    int pipe_count = 0;
-
-    // Copy the original command to preserve it
-    strcpy(save_original_command, s);
-
-    // Tokenize the string into separate commands based on the pipe symbol "|"
-    command = strtok(save_original_command, "|");
-    while (command != NULL)
+    // Check if the command contains the pipe symbol "|"
+    if (strchr(s, '|') == NULL)
     {
-        // Store each command in the array
-        split_into_pipes[pipe_count] = command;
-        pipe_count++;
-        // printf("%s\n", command);
-        // Continue tokenizing to the next command
-        command = strtok(NULL, "|"); // This should be NULL to continue parsing the original string
+        // If there's no pipe, execute the command directly
+        execute_final_terminal(s, q, flag, home_dir, prev_dir);
     }
-    split_into_pipes[pipe_count] = NULL; // Mark the end of the command array
+    else
+    {
+        // If a pipe is found, tokenize and process the piped commands
+        char *split_into_pipes[256];
+        char *command;
+        char save_original_command[256];
+        int pipe_count = 0;
 
-    // Execute the commands using the piped execution function
+        // Copy the original command to preserve it
+        strcpy(save_original_command, s);
 
-    execute_piped_commands(split_into_pipes, q, flag, home_dir, prev_dir);
+        // Tokenize the string into separate commands based on the pipe symbol "|"
+        command = strtok(save_original_command, "|");
+        while (command != NULL)
+        {
+            // Store each command in the array
+            split_into_pipes[pipe_count] = command;
+            pipe_count++;
+
+            // Continue tokenizing to the next command
+            command = strtok(NULL, "|");
+        }
+        split_into_pipes[pipe_count] = NULL; // Mark the end of the command array
+
+        // Execute the commands using the piped execution function
+        execute_piped_commands(split_into_pipes, q, flag, home_dir, prev_dir);
+    }
 }
-
 void write_queue_to_file(queue *q, const char *filename, const char *home_dir)
 {
     char file_path[256];
@@ -571,7 +671,7 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
         else if (strcmp(token, "iMan") == 0)
         {
             token = strtok(NULL, delimiters);
-            if(token==NULL)
+            if (token == NULL)
             {
                 printf("Invalid command\n");
             }
