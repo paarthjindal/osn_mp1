@@ -146,6 +146,7 @@ void get_input(char *buffer, size_t size)
             // Handle end of file (Ctrl+D)
             if (feof(stdin))
             {
+
                 ctrld_handler(); // Call your custom handler for Ctrl+D
                 return;          // Return after handling Ctrl+D (this may exit the program as per your design)
             }
