@@ -143,6 +143,11 @@ assumptions
 i am not printing relative path instead printing full path as i find it better looking and for better understanding 
 
 
+
+in specification activities
+i am assuming that if a proccess is completed , then it will be showing exited when we type the command activities , but this will happen when i am using fg command and bringing background process to foreground process , cause it wont be decremented in my back_process_list
+so i am taking the above assumption
+
 Chat gpt ai link 
 https://chatgpt.com/c/97fa0cdb-2968-41bc-924e-22156c1bcb73
 

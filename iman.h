@@ -2,14 +2,10 @@
 #define IMAN_H
 
 
-#include <sys/types.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
-#include <fcntl.h>
-
+#include "main.h"
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
+void fetchManPage(const char *command);
 
 #endif

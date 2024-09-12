@@ -1,12 +1,16 @@
 allias reveall='reveal -l'
 
-mk_hop()
-{
+allias reveala='reveal -a'
 
+allias home='hop ~'
+
+mk_hop() {
+    mkdir "$1"
+    hop "$1"  
 }
 
-hop_seek()
-{
 
+hop_seek() {
+    hop "$1"   
+    seek "$1"  
 }
-

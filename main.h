@@ -25,7 +25,7 @@
 #include <errno.h>
 #include "fg_and_bg.h"
 #include "neonate.h"
-
+#include "iman.h"
 typedef struct back_proc_list
 {
     char process_name[256];

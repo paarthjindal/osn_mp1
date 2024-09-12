@@ -15,6 +15,7 @@ void fg_command(pid_t pid)
         {
             // Process does not exist
             printf("No such process found\n");
+            return;
         }
         else
         {
@@ -23,19 +24,43 @@ void fg_command(pid_t pid)
         return;
     }
     fclose(status_file);
-    // Attach the process to the terminal
-    // Attempt to set the process group ID to the given PID
-    if (setpgid(pid, pid) == -1)
+    // Bring the process to the foreground by assigning it terminal control
+
+    // Send a SIGCONT signal to the process to continue if it was stopped
+    if (kill(pid, SIGCONT) == -1)
     {
-        perror("Failed to set process group ID");
+        perror("Failed to send SIGCONT");
         return;
     }
-    // Wait for the process to finish or be stopped
 
-    int status;
-    if (waitpid(pid, &status, WUNTRACED) == -1)
+    if (tcsetpgrp(STDIN_FILENO, getpgid(pid)) == -1)
     {
-        perror("Failed to wait for process");
+        perror("Failed to set terminal control to the process");
+        return;
+    }
+
+    // Send a SIGCONT signal to the process to continue if it was stopped
+    if (kill(pid, SIGCONT) == -1)
+    {
+        perror("Failed to send SIGCONT");
+        return;
+    }
+
+    // Wait for the process to finish or be stopped
+    int status;
+    // if (waitpid(pid, &status, WUNTRACED) == -1)
+    // {
+    //     perror("Failed to wait for process");
+    //     return;
+    // }
+    while (waitpid(pid, &status, WUNTRACED) == -1 && errno == EINTR)
+    {
+    }
+
+    // Restore terminal control to the shell
+    if (tcsetpgrp(STDIN_FILENO, getpgid(getpid())) == -1)
+    {
+        perror("Failed to restore terminal control to the shell");
         return;
     }
 }

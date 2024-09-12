@@ -568,6 +568,18 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
                 printf("Invalid command\n");
             }
         }
+        else if (strcmp(token, "iMan") == 0)
+        {
+            token = strtok(NULL, delimiters);
+            if(token==NULL)
+            {
+                printf("Invalid command\n");
+            }
+            else
+            {
+                fetchManPage(token);
+            }
+        }
         else
         {
             // printf("wrong input\n");

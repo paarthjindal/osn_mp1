@@ -1,15 +1,15 @@
 activities
-sleep 6
+sleep 25
+fg 1254772
+sleep 10 &
+activites
 activities
-fg 1147786
-ps
-sleep 5
+activiities
+sleep 5 &
 activities
-ps 1159522
-hop lesgo
-hop ..
-sleep 5
+sleep 5 &
 activities
-neonate -n 3
-neonate -n 2
-activities
+sleep 10 &
+sleep 24 &
+ping 1257829 19
+fg 1257829
