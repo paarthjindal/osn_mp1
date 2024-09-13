@@ -168,6 +168,14 @@ https://chatgpt.com/c/97fa0cdb-2968-41bc-924e-22156c1bcb73
 
 https://chatgpt.com/c/66e0ae49-dea8-8007-baac-68b52fc355b1
 
+![Screenshot from 2024-09-13 21-44-12](https://github.com/user-attachments/assets/f8abf0b2-7358-4dbc-b115-74f59975b5ac)
+![Screenshot from 2024-09-13 21-44-29](https://github.com/user-attachments/assets/5d938a43-360b-481d-ae18-b65deafea00f)
+
+![Screenshot from 2024-09-13 22-16-19](https://github.com/user-attachments/assets/35c48426-eef2-4f6c-9716-88102acaf267)
+
+![Screenshot from 2024-09-13 22-16-46](https://github.com/user-attachments/assets/9cfe63d0-4cd7-4854-b860-3eacc416ec25)
+![Screenshot from 2024-09-13 22-17-11](https://github.com/user-attachments/assets/74fae91d-dd89-4127-a1d4-aee3570fe114)
+![Screenshot from 2024-09-13 22-17-20](https://github.com/user-attachments/assets/e0456800-7459-4c13-a966-e827c28da856)
 
 
 
