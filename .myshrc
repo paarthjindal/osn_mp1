@@ -1,8 +1,8 @@
-allias reveall='reveal -l'
+alias reveall='reveal -l'
 
-allias reveala='reveal -a'
+alias reveala='reveal -a'
 
-allias home='hop ~'
+alias home='hop ~'
 
 mk_hop() {
     mkdir "$1"

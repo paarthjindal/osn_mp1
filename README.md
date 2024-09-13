@@ -150,6 +150,15 @@ so i am taking the above assumption
 
 - i am assuming that hop .. | wc wont change the directory just like a normal terminal works
 
+- i am assumign that when i am doing i-o redirection for background process , the line background process started : pid wont be shown in the terminal , instead it will be shown in the file 
+
+echo hi >mehul.txt & | wc
+Invalid use of pipe
+<paarth@Paarthjindal:~> Process 'echo hi ' with PID 1489010 ended normally with exit status 0
+
+<paarth@Paarthjindal:~> cat mehul.txt
+Background process started: PID 1489010
+hi
 Chat gpt ai link 
 https://chatgpt.com/c/97fa0cdb-2968-41bc-924e-22156c1bcb73
 

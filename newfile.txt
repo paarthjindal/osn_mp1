@@ -1,15 +1,15 @@
-!
-|
-cat newfile.txt | wc | 
-cat newfile.txt|wc|     
-cat newfile.txt|wc
-|
-cat newfile.txt |wc|
-sleep 5
-actvities
+sleep 5&
 activities
-ps 1401639
-proclore 1401639
-echo hi , echo no >>mehul.txt ; cat mehul.txt |wc
-echo hi ; echo mistake > mehul.txt ; cat mehul.txt | wc
-echo "got it" >>mehul.txt &
+ello
+sleep 6
+activities
+sleep 5
+hi
+helo
+hi
+hop lesgo
+reveall
+home
+reveala
+hop lesgo
+home

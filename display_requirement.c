@@ -3,6 +3,7 @@
 #define x 256
 #define y 256
 #define z 256
+extern char update_prompt[256];
 
 #define RESET_COLOR "\033[0m"
 #define USER_COLOR "\033[34m" // Blue
@@ -56,14 +57,17 @@ void prompt(char *home_dir)
         exit(EXIT_FAILURE);
     }
 
-    // Display the prompt with colors
-    printf("%s<%s%s%s@%s%s%s:%s%s%s>%s ",
-           RESET_COLOR,
-           USER_COLOR, username,
-           RESET_COLOR,
-           HOST_COLOR, systemname,
-           RESET_COLOR,
-           DIR_COLOR, relative_dir,
-           RESET_COLOR,
-           RESET_COLOR);
+    // Assuming YELLOW_COLOR is defined, e.g., #define YELLOW_COLOR "\033[1;33m"
+
+printf("%s<%s%s%s@%s%s%s:%s%s%s%s %s%s%s>",
+       RESET_COLOR,
+       USER_COLOR, username,
+       RESET_COLOR,
+       HOST_COLOR, systemname,
+       RESET_COLOR,
+       DIR_COLOR, relative_dir,
+       RESET_COLOR,
+       RESET_COLOR,
+       DIR_COLOR, update_prompt,
+       RESET_COLOR);
 }

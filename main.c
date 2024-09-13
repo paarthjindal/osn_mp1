@@ -1,56 +1,11 @@
 #include "main.h"
 #define _XOPEN_SOURCE 700
-
-#include "display_requirement.h"
-#include "proclore.h"
-#include "input_requirement.h"
-#include "log_commands.h"
-#include "pipes.h"
-#include "i_o_redirection.h"
-#include "redirection_along_with_pipes.h"
-
 // Assuming maximum number of background processes is 256
 back_proc_list background_process_list[256];
-// used in activites.h
+
+char update_prompt[256] = "";
+
 int process_count = 0; // Track the number of background processes
-
-// Signal handler for SIGCHLD
-void sigchld_handler(int sig)
-{
-    int status;
-    pid_t pid;
-    // Loop to handle all terminated child processes
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
-    {
-        // Find the process in the background process list
-        for (int i = 0; i < process_count; i++)
-        {
-            if (background_process_list[i].process_id == pid)
-            {
-                // Print termination message
-                if (WIFEXITED(status))
-                {
-                    printf("Process '%s' with PID %d ended normally with exit status %d\n",
-                           background_process_list[i].process_name, pid, WEXITSTATUS(status));
-                }
-                else if (WIFSIGNALED(status))
-                {
-                    printf("Process '%s' with PID %d ended abnormally due to signal %d\n",
-                           background_process_list[i].process_name, pid, WTERMSIG(status));
-                }
-
-                // Remove the process from the background process list
-                for (int j = i; j < process_count - 1; j++)
-                {
-                    background_process_list[j] = background_process_list[j + 1];
-                }
-                process_count--; // Reduce the count of background processes
-
-                break;
-            }
-        }
-    }
-}
 
 fore_process_list foreground_process_pid;
 void initialize_foreground_process_pid()
@@ -58,68 +13,7 @@ void initialize_foreground_process_pid()
     foreground_process_pid.process_id = -1;
 }
 
-void ctrlc_handler(int sig)
-{
-    if (foreground_process_pid.process_id != -1)
-    {
-        // If a foreground process exists, send SIGINT to it
-        kill(foreground_process_pid.process_id, SIGINT);
-        printf("\nForeground process with PID %d interrupted\n", foreground_process_pid.process_id);
-        foreground_process_pid.process_id = -1; // Reset the foreground process PID after sending SIGINT
-    }
-    else
-    {
-        // perhaps i need to change something over here
-        printf("\n");
-        fflush(stdout);
-    }
-}
-
-// Signal handler for SIGTSTP
-void ctrlz_handler(int sig)
-{
-    if (foreground_process_pid.process_id != -1)
-    {
-        if (kill(foreground_process_pid.process_id, SIGTSTP) == -1)
-        {
-            perror("Failed to send SIGTSTP");
-            return;
-        }
-
-        background_process_list[process_count].process_id = foreground_process_pid.process_id;
-        strncpy(background_process_list[process_count].process_name, foreground_process_pid.process_name, 255);
-        background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
-
-        process_count++;
-
-        printf("\nForeground process stopped\n");
-    }
-    else
-    {
-        printf("\nShell: No foreground process to interrupt\n");
-        fflush(stdout);
-    }
-}
-
-void ctrld_handler()
-{
-    printf("Ctrl+D detected. Terminating all ongoing processes...\n");
-
-    for (int i = 0; i < process_count; i++)
-    {
-        if (kill(background_process_list[i].process_id, SIGKILL) == -1)
-        {
-            perror("Failed to kill background process");
-        }
-    }
-    // Wait for all child processes to terminate
-
-    // Now exit the terminal
-    printf("All processes killed. Exiting terminal.\n");
-    exit(0);
-}
-
-void get_input(char *buffer, size_t size)
+void get_input(char *buffer, size_t size, char *save_dir)
 {
     while (1)
     {
@@ -133,7 +27,9 @@ void get_input(char *buffer, size_t size)
         if (errno == EINTR)
         {
             // Interrupted by a signal, inform the user and retry the input
-            printf("\nInput interrupted by a signal, please retry: ");
+            // printf("\n");
+            prompt(save_dir);
+            getchar();
             fflush(stdout); // Flush the output buffer to ensure prompt display
             continue;       // Retry the input
         }
@@ -197,15 +93,14 @@ int main()
 
     while (flag)
     {
-        // Update and display the prompt
-
         prompt(save_dir);
+        strcpy(update_prompt, "");
         signal(SIGINT, ctrlc_handler);  // Handle Ctrl+C
         signal(SIGTSTP, ctrlz_handler); // Handle Ctrl+Z
         // Read user input and store in input
         char input[256];
         fflush(stdout);
-        get_input(input, 256);
+        get_input(input, 256, save_dir);
         int size = strlen(input);
         if (size == 0 || (size == 1 && input[0] == '\n'))
         {
@@ -289,6 +184,10 @@ int main()
         {
             if (background[i] == 1)
             {
+                int saved_stdin = dup(STDIN_FILENO);
+                int saved_stdout = dup(STDOUT_FILENO);
+                execute_terminal_back(arr[i], q, &flag, home_dir, prev_dir);
+
                 pid_t back_process = fork();
                 if (back_process < 0)
                 {
@@ -297,6 +196,7 @@ int main()
                 }
                 else if (back_process == 0)
                 {
+
                     char *token = strtok(arr[i], " \t");
                     char *arr1[100];
                     int j = 0;
@@ -318,7 +218,6 @@ int main()
                 {
                     // Update process information after the fork is successful
                     sigset_t mask, old_mask;
-
                     // Block SIGCHLD temporarily while updating process_count to avoid race conditions
                     sigemptyset(&mask);
                     sigaddset(&mask, SIGCHLD);
@@ -334,7 +233,9 @@ int main()
                     sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
                     printf("Background process started: PID %d\n", back_process);
+                    fflush(stdout);
                 }
+                restore_io(saved_stdin, saved_stdout);
             }
             else
             {
@@ -353,12 +254,15 @@ int main()
                                       (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
 
                 // Print the time if the command took more than 2 second  i assumed that i need to print after 2 seconds
-                if (elapsed_time >= 2.0)
+                if (elapsed_time > 2.0)
                 {
                     // Round down the elapsed time to the nearest integer
                     int rounded_time = (int)elapsed_time;
                     printf("Foreground command '%s' took %d seconds to complete.\n", arr[i], rounded_time);
-                    printf("<%s@SYS:%s %s : %ds>\n", getenv("USER"), home_dir, arr[i], rounded_time);
+                    snprintf(update_prompt, sizeof(update_prompt), "%s : %ds", arr[i], rounded_time);
+                    // printf("%s",update_prompt);
+
+                    // printf("<%s@SYS:%s %s : %ds>\n", getenv("USER"), home_dir, arr[i], rounded_time);
                 }
             }
         }

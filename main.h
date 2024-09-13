@@ -2,6 +2,7 @@
 #define MAIN_H
 #define _XOPEN_SOURCE 700
 
+#define MAX_LINE_LENGTH 256
 
 #include "display_requirement.h"
 #include "proclore.h"
@@ -22,10 +23,14 @@
 #include "activites.h"
 #include "log_commands.h"
 #include "signals.h"
+#include "seek.h"
+
 #include <errno.h>
 #include "fg_and_bg.h"
 #include "neonate.h"
 #include "iman.h"
+#include "pipes.h"
+#include"alias.h"
 typedef struct back_proc_list
 {
     char process_name[256];
@@ -38,9 +43,12 @@ typedef struct fore_proc_list
     pid_t process_id;
 }fore_process_list;
 
+
+
 extern back_proc_list background_process_list[256];
 
 extern fore_process_list foreground_process_pid;
 
+// extern char update_prompt[256];
 
 #endif
