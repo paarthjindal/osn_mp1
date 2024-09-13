@@ -171,6 +171,24 @@ https://chatgpt.com/c/66e0ae49-dea8-8007-baac-68b52fc355b1
 
 
 
+![Screenshot from 2024-09-13 20-58-44](https://github.com/user-attachments/assets/dbc1b14d-b720-421a-895a-16d6ab6715a1)
+
+![Screenshot from 2024-09-13 20-58-52](https://github.com/user-attachments/assets/a9f604f1-112a-4f71-b1c9-e3dea7a26a13)
+
+
+![Screenshot from 2024-09-13 20-59-06](https://github.com/user-attachments/assets/32962369-ed8b-407d-9cc6-805d88f4d3f4)
+
+![Screenshot from 2024-09-13 20-59-11](https://github.com/user-attachments/assets/2741093f-4f2c-4d7e-baf7-27b0761b232b)
+
+
+
+![Screenshot from 2024-09-13 21-03-47](https://github.com/user-attachments/assets/cc4e623b-0e5d-425a-b037-ca5f9e4f33ea)
+
+![Screenshot from 2024-09-13 21-03-57](https://github.com/user-attachments/assets/63690270-cdab-4962-a044-8e95294a4534)
+
+
+
+
 echo hi | wc
       1       1       3
 <paarth@Paarthjindal:~ >echo hi | wc &
