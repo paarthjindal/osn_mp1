@@ -4,6 +4,8 @@
 #include "seek.h"
 #include "main.h"
 #include "neonate.h"
+
+extern int process_count;
 // dont know for some reason there is infinte loop going on if i type yes in the command line
 
 int handle_redirection_back(char *cmd)
@@ -78,7 +80,7 @@ void execute_single_command_back(char *command, queue *q, int *flag, char *home_
     }
 
     // Execute command after handling redirection
-    // execute_final_terminal(command, q, flag, home_dir, prev_dir);
+    execute_final_terminal_back(command);
 
     // Restore original I/O for the next command
     // restore_io(saved_stdin, saved_stdout);
@@ -87,6 +89,7 @@ void execute_single_command_back(char *command, queue *q, int *flag, char *home_
 
 void execute_piped_commands_back(char **commands, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
+    // printf("paart");
     int i = 0, in_fd = 0, fd[2];
     pid_t pid;
     int save_in, save_out;
@@ -141,14 +144,12 @@ void execute_piped_commands_back(char **commands, queue *q, int *flag, char *hom
 
             // Close read end of the pipe in the child process
             close(fd[0]);
-
-            // Execute the command (replace this with your command execution function)
             execute_single_command_back(commands[i], q, flag, home_dir, prev_dir);
 
             // Exit the child process
             exit(0);
         }
-        else // Parent process
+        else
         {
             // Wait for the child to finish if it's the last command
             if (commands[i + 1] == NULL)
@@ -161,8 +162,6 @@ void execute_piped_commands_back(char **commands, queue *q, int *flag, char *hom
 
             // Set the input for the next command to the read end of the pipe
             in_fd = fd[0];
-
-            // Parent continues to the next command
             i++;
         }
     }
@@ -178,7 +177,7 @@ void execute_piped_commands_back(char **commands, queue *q, int *flag, char *hom
         ;
 }
 
-void execute_terminal_back(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)  
+void execute_terminal_back(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
 
     while (*s == ' ')
@@ -195,35 +194,79 @@ void execute_terminal_back(char *s, queue *q, int *flag, char *home_dir, char *p
     }
     else
     {
-        // Error check: command should not start or end with a pipe
+        // printf("over here");
+        // Error check invaid use of pipes: command should not start or end with a pipe
         if (s[0] == '|' || s[len - 1] == '|')
         {
             printf("Invalid use of pipe\n");
             return; // Exit due to invalid pipe usage
         }
-        // If a pipe is found, tokenize and process the piped commands
         char *split_into_pipes[256];
         char *command;
         char save_original_command[256];
         int pipe_count = 0;
-
-        // Copy the original command to preserve it
         strcpy(save_original_command, s);
-
-        // Tokenize the string into separate commands based on the pipe symbol "|"
         command = strtok(save_original_command, "|");
         while (command != NULL)
         {
-            // Store each command in the array
             split_into_pipes[pipe_count] = command;
             pipe_count++;
-
-            // Continue tokenizing to the next command
             command = strtok(NULL, "|");
         }
-        split_into_pipes[pipe_count] = NULL; // Mark the end of the command array
-
-        // Execute the commands using the piped execution function
+        split_into_pipes[pipe_count] = NULL;
         execute_piped_commands_back(split_into_pipes, q, flag, home_dir, prev_dir);
+    }
+}
+
+void execute_final_terminal_back(char *command)
+{
+    pid_t back_process = fork();
+
+    if (back_process < 0)
+    {
+        perror("fork failed");
+        return;
+    }
+    else if (back_process == 0)
+    {
+
+        char *token = strtok(command, " \t");
+        char *arr1[100];
+        int j = 0;
+        while (token != NULL && j < 99)
+        {
+            arr1[j] = token;
+            j++;
+            token = strtok(NULL, " \t");
+        }
+        arr1[j] = NULL;
+
+        if (execvp(arr1[0], arr1) < 0)
+        {
+            perror("Invalid Command");
+            exit(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        // Update process information after the fork is successful
+        sigset_t mask, old_mask;
+        // Block SIGCHLD temporarily while updating process_count to avoid race conditions
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        sigprocmask(SIG_BLOCK, &mask, &old_mask);
+
+        // Store the background process details
+        background_process_list[process_count].process_id = back_process;
+        strncpy(background_process_list[process_count].process_name, command, 255);
+        background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
+        process_count++;                                                 // Safely increment process_count
+
+        // Unblock SIGCHLD after updating process list
+        sigprocmask(SIG_SETMASK, &old_mask, NULL);
+
+        fprintf(stderr, "Background process started: PID %d\n", back_process);
+
+        fflush(stdout);
     }
 }

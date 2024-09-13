@@ -1,15 +1,15 @@
-sleep 5&
+sleep 6 &
 activities
-ello
-sleep 6
+sleep 4
+sleep 6 &
 activities
-sleep 5
-hi
-helo
-hi
-hop lesgo
+cat mehul.txt
+echo no >>mehul.txt & ; echo hi | wc &
+echo no >>mehul.txt ; 
+cat mehul.txt
+echo please >mehul.txt &
+cat mehul.txt
+echo hi | wc
+echo hi | wc &
+hop lesgo ; log
 reveall
-home
-reveala
-hop lesgo
-home

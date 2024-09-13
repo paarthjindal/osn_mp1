@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "limits.h": "c",
-        "alias.h": "c"
+        "alias.h": "c",
+        "log_commands.h": "c"
     }
 }

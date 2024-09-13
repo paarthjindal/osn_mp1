@@ -71,3 +71,4 @@ printf("%s<%s%s%s@%s%s%s:%s%s%s%s %s%s%s>",
        DIR_COLOR, update_prompt,
        RESET_COLOR);
 }
+

@@ -6,7 +6,6 @@ char lvda[128] = ".myshrc";
 // Function to read bash file and store aliases in the linked list
 
 
-AliasNode *start = NULL;
 int handle_redirection(char *cmd)
 {
     char *infile = NULL, *outfile = NULL;
@@ -274,31 +273,7 @@ void read_queue_from_file(queue *q, const char *filename, const char *home_dir)
 
 void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *prev_dir)
 {
-   char* filename=".myshrc";
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        perror("Failed to open file");
-        return;
-    }
-
-    char line[MAX_LINE_LENGTH];
-    while (fgets(line, sizeof(line), file))
-    {
-        // Check if the line starts with "alias"
-        if (strncmp(line, "alias", 5) == 0)
-        {
-            // Parse the alias name and its command
-            char alias_name[MAX_LINE_LENGTH];
-            char alias_command[MAX_LINE_LENGTH];
-
-            // Extract the alias name and command from the line
-            sscanf(line, "alias %[^=]=\'%[^\']\'", alias_name, alias_command);
-
-            // Add the alias to the linked list
-            add_alias(&start, alias_name, alias_command);
-        }
-    }
+   
     // print(start);
     if(find_alias(start,s)==NULL)
     {
@@ -309,7 +284,6 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
         s=find_alias(start,s);
     }
 
-    fclose(file);
     char delimiters[] = " \t";
     char y[256];
     strcpy(y, s);
@@ -319,7 +293,7 @@ void execute_final_terminal(char *s, queue *q, int *flag, char *home_dir, char *
 
     while (token != NULL)
     {
-        printf("Token: %s\n", token);
+        // printf("Token: %s\n", token);
         // printf("%s\n", y);
 
         // Check if the first token is "EXIT"3

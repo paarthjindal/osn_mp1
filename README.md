@@ -152,15 +152,33 @@ so i am taking the above assumption
 
 - i am assumign that when i am doing i-o redirection for background process , the line background process started : pid wont be shown in the terminal , instead it will be shown in the file 
 
-echo hi >mehul.txt & | wc
-Invalid use of pipe
-<paarth@Paarthjindal:~> Process 'echo hi ' with PID 1489010 ended normally with exit status 0
+- reveal &
+Background process started: PID 1725522
+<paarth@Paarthjindal:/lesgo >Invalid Command: No such file or directory
+Process 'reveal' with PID 1725522 ended normally with exit status 1
 
-<paarth@Paarthjindal:~> cat mehul.txt
-Background process started: PID 1489010
-hi
+I have not handled cases where in when backgroun process terminated , output and termination message will directly be printed on the terminal , so it wont look good but as i type next command , it will work properly
+
+- in mine case & applies to the pipe as whole becase of mine wrong implementation of & before than pipe 
+
+
 Chat gpt ai link 
 https://chatgpt.com/c/97fa0cdb-2968-41bc-924e-22156c1bcb73
 
 
 https://chatgpt.com/c/66e0ae49-dea8-8007-baac-68b52fc355b1
+
+
+
+
+echo hi | wc
+      1       1       3
+<paarth@Paarthjindal:~ >echo hi | wc &
+Background process started: PID 1810479
+Background process started: PID 1810480
+<paarth@Paarthjindal:~ >      1       1       3
+
+<paarth@Paarthjindal:~ >
+
+- for above mine background process is properly working when it is alone or used with input ouptut redirection , but when i am using it wiht piping , i have to do a double fork in it which is givng me two fork process leading to the above ressult
+

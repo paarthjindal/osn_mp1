@@ -2,13 +2,14 @@
 #define MAIN_H
 #define _XOPEN_SOURCE 700
 
+#define MAX_LENGTH 256
 #define MAX_LINE_LENGTH 256
 
 #include "display_requirement.h"
 #include "proclore.h"
 #include "input_requirement.h"
 #include "log_commands.h"
-#include "pipes.h"
+#include "background.h"
 #include "i_o_redirection.h"
 #include "redirection_along_with_pipes.h"
 #include <sys/types.h>
@@ -29,7 +30,6 @@
 #include "fg_and_bg.h"
 #include "neonate.h"
 #include "iman.h"
-#include "pipes.h"
 #include"alias.h"
 typedef struct back_proc_list
 {

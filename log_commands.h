@@ -1,12 +1,6 @@
 #ifndef LOG_COMMANDS_H
 #define LOG_COMMANDS_H
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <limits.h>
-#include <sys/types.h>
+#include "main.h"
 
 
 #define max_length 256

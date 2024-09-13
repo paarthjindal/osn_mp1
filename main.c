@@ -1,9 +1,10 @@
 #include "main.h"
 #define _XOPEN_SOURCE 700
 // Assuming maximum number of background processes is 256
-back_proc_list background_process_list[256];
+back_proc_list background_process_list[MAX_LENGTH];
 
-char update_prompt[256] = "";
+char update_prompt[MAX_LENGTH] = "";
+AliasNode *start = NULL;
 
 int process_count = 0; // Track the number of background processes
 
@@ -39,8 +40,8 @@ void get_input(char *buffer, size_t size, char *save_dir)
             if (feof(stdin))
             {
 
-                ctrld_handler(); // Call your custom handler for Ctrl+D
-                return;          // Return after handling Ctrl+D (this may exit the program as per your design)
+                ctrld_handler();
+                return;
             }
             else
             {
@@ -59,8 +60,31 @@ int main()
     printf("%s%sWelcome to C shell Made by paarth%s\n\n", DARK_RED_BG, PURPLE_FG, RESET);
 
     initialize_foreground_process_pid();
+    char *name = ".myshrc";
+    FILE *file = fopen(name, "r");
+    if (file == NULL)
+    {
+        perror("Failed to open file");
+    }
 
-    // Set up the SIGCHLD signal handler
+    char line[MAX_LINE_LENGTH];
+    while (fgets(line, sizeof(line), file))
+    {
+        // Check if the line starts with "alias"
+        if (strncmp(line, "alias", 5) == 0)
+        {
+            // Parse the alias name and its command
+            char alias_name[MAX_LINE_LENGTH];
+            char alias_command[MAX_LINE_LENGTH];
+
+            // Extract the alias name and command from the line
+            sscanf(line, "alias %[^=]=\'%[^\']\'", alias_name, alias_command);
+
+            // Add the alias to the linked list
+            add_alias(&start, alias_name, alias_command);
+        }
+    }
+    fclose(file);
     struct sigaction sa;
     sa.sa_handler = sigchld_handler;
     sa.sa_flags = SA_RESTART | SA_NOCLDSTOP; // Restart interrupted system calls and don't call handler when children stop
@@ -126,7 +150,6 @@ int main()
 
         while (temp != NULL)
         {
-            // Trim leading and trailing whitespace
             while (*temp == ' ' || *temp == '\t')
                 temp++;
             int len = strlen(temp);
@@ -134,26 +157,29 @@ int main()
             {
                 temp[--len] = '\0';
             }
-
+            if (strstr(temp, "|") != NULL && strstr(temp, "&") != NULL && temp[len - 1] != '&')
+            {
+                printf("erorr in using & and | together\n");
+                temp = strtok(NULL, ";");
+            }
+            if (temp == NULL)
+            {
+                break;
+            }
             char *current_part = temp;
             int i = 0;
-            // printf("stdghghj\n");
             // printf("%s\n",current_part);
-
-            // Traverse the string to find '&'
             while (i < len)
             {
                 if (current_part[i] == '&')
                 {
-
                     // if (arr[command_count] != NULL)
                     {
-                        strncpy(arr[command_count], current_part, i); // Copy the substring from current_part
-                        arr[command_count][i] = '\0';                 // Null-terminate the string
-                        background[command_count] = 1;                // Mark as background
+                        strncpy(arr[command_count], current_part, i);
+                        arr[command_count][i] = '\0';
+                        background[command_count] = 1;
                         command_count++;
                     }
-
                     // Move to the part after '&'
                     current_part = temp + i + 1;
 
@@ -165,7 +191,6 @@ int main()
                     i++;
                 }
             }
-
             // If there's still a part left after the last '&', add it as a foreground command
             if (*current_part != '\0')
             {
@@ -176,93 +201,37 @@ int main()
                     command_count++;
                 }
             }
-            // Move to the next tokenized command by ';'
             temp = strtok(NULL, ";");
         }
-
+        // printf("%d",command_count);
         for (int i = 0; i < command_count; i++)
         {
             if (background[i] == 1)
             {
                 int saved_stdin = dup(STDIN_FILENO);
                 int saved_stdout = dup(STDOUT_FILENO);
+                // printf("no");
                 execute_terminal_back(arr[i], q, &flag, home_dir, prev_dir);
-
-                pid_t back_process = fork();
-                if (back_process < 0)
-                {
-                    perror("fork failed");
-                    continue;
-                }
-                else if (back_process == 0)
-                {
-
-                    char *token = strtok(arr[i], " \t");
-                    char *arr1[100];
-                    int j = 0;
-                    while (token != NULL && j < 99)
-                    {
-                        arr1[j] = token;
-                        j++;
-                        token = strtok(NULL, " \t");
-                    }
-                    arr1[j] = NULL;
-
-                    if (execvp(arr1[0], arr1) < 0)
-                    {
-                        perror("Invalid Command");
-                        exit(EXIT_FAILURE);
-                    }
-                }
-                else
-                {
-                    // Update process information after the fork is successful
-                    sigset_t mask, old_mask;
-                    // Block SIGCHLD temporarily while updating process_count to avoid race conditions
-                    sigemptyset(&mask);
-                    sigaddset(&mask, SIGCHLD);
-                    sigprocmask(SIG_BLOCK, &mask, &old_mask);
-
-                    // Store the background process details
-                    background_process_list[process_count].process_id = back_process;
-                    strncpy(background_process_list[process_count].process_name, arr[i], 255);
-                    background_process_list[process_count].process_name[255] = '\0'; // Null-terminate string
-                    process_count++;                                                 // Safely increment process_count
-
-                    // Unblock SIGCHLD after updating process list
-                    sigprocmask(SIG_SETMASK, &old_mask, NULL);
-
-                    printf("Background process started: PID %d\n", back_process);
-                    fflush(stdout);
-                }
                 restore_io(saved_stdin, saved_stdout);
             }
             else
             {
-                // execute_terminal(arr[i], q, &flag, home_dir, prev_dir);
-                // Measure execution time for foreground commands
+                //    execute_with_timing(arr[i], q, &flag, home_dir, prev_dir);
                 struct timespec start_time, end_time;
-                clock_gettime(CLOCK_MONOTONIC, &start_time); // Record the start time
+                clock_gettime(CLOCK_MONOTONIC, &start_time);
 
                 execute_terminal(arr[i], q, &flag, home_dir, prev_dir);
-                // handle_io_redirection_and_piping(arr[i],0,q,&flag,home_dir,prev_dir);
 
-                clock_gettime(CLOCK_MONOTONIC, &end_time); // Record the end time
+                clock_gettime(CLOCK_MONOTONIC, &end_time);
 
-                // Calculate the elapsed time
                 double elapsed_time = (end_time.tv_sec - start_time.tv_sec) +
                                       (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
 
-                // Print the time if the command took more than 2 second  i assumed that i need to print after 2 seconds
                 if (elapsed_time > 2.0)
                 {
-                    // Round down the elapsed time to the nearest integer
                     int rounded_time = (int)elapsed_time;
                     printf("Foreground command '%s' took %d seconds to complete.\n", arr[i], rounded_time);
                     snprintf(update_prompt, sizeof(update_prompt), "%s : %ds", arr[i], rounded_time);
-                    // printf("%s",update_prompt);
-
-                    // printf("<%s@SYS:%s %s : %ds>\n", getenv("USER"), home_dir, arr[i], rounded_time);
                 }
             }
         }
