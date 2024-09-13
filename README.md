@@ -187,6 +187,16 @@ https://chatgpt.com/c/66e0ae49-dea8-8007-baac-68b52fc355b1
 ![Screenshot from 2024-09-13 21-03-57](https://github.com/user-attachments/assets/63690270-cdab-4962-a044-8e95294a4534)
 
 
+![Screenshot from 2024-09-13 21-24-20](https://github.com/user-attachments/assets/6f3acd5a-2342-4019-a13e-49f2ae05e890)
+![Screenshot from 2024-09-13 21-24-28](https://github.com/user-attachments/assets/7eb24f4d-e2c7-40fe-b249-c360f8a17fca)
+
+![Screenshot from 2024-09-13 21-27-21](https://github.com/user-attachments/assets/773e0475-0f59-447a-81b0-ebb23363d251)
+
+![Screenshot from 2024-09-13 21-27-41](https://github.com/user-attachments/assets/bb33ddd0-bbfc-4d95-9eee-df5b1e43e26d)
+
+![Screenshot from 2024-09-13 21-27-49](https://github.com/user-attachments/assets/9f5c3640-62ad-4ad0-a641-cab5a550c4cf)
+
+
 
 
 echo hi | wc
